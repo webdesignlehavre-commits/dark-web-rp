@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DARKNET // Portail Underground RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127760;</text></svg>">
+</head>
+<body>
+  <!-- Matrix rain canvas -->
+  <canvas class="matrix-bg" id="matrix"></canvas>
+
+  <!-- Warning banner -->
+  <div class="warning-banner">
+    &#9888; ATTENTION: Ce reseau est reserve aux participants RP. Toute activite reelle est interdite. &#9888;
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">DARK<span>NET</span></div>
+    <nav>
+      <div id="auth-buttons" style="display:flex;gap:10px">
+        <a href="/login.html">CONNEXION</a>
+        <a href="/register.html">INSCRIPTION</a>
+      </div>
+      <div id="user-buttons" style="display:none;gap:10px"></div>
+    </nav>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>&#127760; DARKNET RP</h1>
+    <div class="subtitle">Le reseau underground pour les hackers, lesdealers, les hackers... en roleplay.</div>
+    
+    <div class="terminal">
+      <div class="line"><span class="prompt">darknet@rp:~$</span> <span class="cmd">connect --tor --hidden</span></div>
+      <div class="line"><span class="output">[*] Connexion au reseau TOR...</span></div>
+      <div class="line"><span class="output">[*] Noeud relais: 3 sauts restants...</span></div>
+      <div class="line"><span class="output">[*] Adresse onion: generation en cours...</span></div>
+      <div class="line"><span class="output">[+] Connecte au DARKNET RP</span></div>
+      <div class="line"><span class="prompt">darknet@rp:~$</span> <span class="cursor"></span></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="container">
+    <div class="stats-bar" id="stats"></div>
+
+    <!-- Hidden Services -->
+    <div class="section-title">SERVICES CACHES</div>
+    <div id="hidden-services">
+      <div class="hidden-service">
+        <div>
+          <div class="service-name">&#128274; MARCHE NOIR</div>
+          <div class="onion-url">http://marche-noir.x7z3k.onion</div>
+        </div>
+      </div>
+      <div class="hidden-service">
+        <div>
+          <div class="service-name">&#128187; HACK LAB</div>
+          <div class="onion-url">http://hacklab.d4ark.onion</div>
+        </div>
+      </div>
+      <div class="hidden-service">
+        <div>
+          <div class="service-name">&#128222; COMM CRYPT</div>
+          <div class="onion-url">http://commcrypt.rpnet.onion</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sites Directory -->
+    <div class="section-title">SERVICES DISPONIBLES</div>
+    <div class="sites-grid" id="sites-grid">
+      <p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">
+        Chargement...
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="warning">CE SITE EST UNIQUEMENT POUR DU ROLEPLAY. AUCUNE ACTIVITE REELLE N'A LIEU.</div>
+    <div>DARKNET RP &copy; 2026 // Tous droits reserves // Usage RP uniquement</div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal">
+      <h3>&#128274; CONNEXION</h3>
+      <div id="login-alert"></div>
+      <div class="form-group">
+        <label>PSEUDO</label>
+        <input type="text" id="login-user" placeholder="Ton pseudo...">
+      </div>
+      <div class="form-group">
+        <label>MOT DE PASSE</label>
+        <input type="password" id="login-pass" placeholder="Ton mdp...">
+      </div>
+      <button class="btn" onclick="doLogin()">CONNEXION</button>
+      <p style="text-align:center;margin-top:15px;font-size:0.8em">
+        <a href="/login.html" style="color:var(--text-dim)">Page de connexion complete</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // Matrix rain
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = ' DARKNET0123456789ABCDEF@#$%&*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px Fira Code';
+      drops.forEach((y, i) => {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+    setInterval(drawMatrix, 50);
+    
+    // Load stats and sites
+    loadStats();
+    loadSites();
+    
+    // Quick login
+    async function doLogin() {
+      const user = document.getElementById('login-user').value;
+      const pass = document.getElementById('login-pass').value;
+      const result = await login(user, pass);
+      if (result.success) {
+        document.getElementById('login-modal').classList.remove('active');
+        if (result.is_admin) window.location.href = '/admin.html';
+      } else {
+        showAlert('login-alert', result.error);
+      }
+    }
+  </script>
+</body>
+</html>

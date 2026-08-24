@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DARKNET // Connexion</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="logo" style="text-decoration:none">DARK<span>NET</span></a>
+  </div>
+
+  <div class="container">
+    <div class="form-container">
+      <h2>&#128274; CONNEXION AU DARKNET</h2>
+      <div id="alert"></div>
+      
+      <div class="form-group">
+        <label>PSEUDO</label>
+        <input type="text" id="username" placeholder="Entrez votre pseudo..." autofocus>
+      </div>
+      
+      <div class="form-group">
+        <label>MOT DE PASSE</label>
+        <input type="password" id="password" placeholder="Entrez votre mot de passe...">
+        <div class="hint">Admin? Utilisez le code secret.</div>
+      </div>
+      
+      <button class="btn" onclick="doLogin()">SE CONNECTER</button>
+      
+      <p style="text-align:center;margin-top:20px;font-size:0.85em;color:var(--text-dim)">
+        Pas encore de compte ? <a href="/register.html" style="color:var(--accent)">S'inscrire</a>
+      </p>
+      <p style="text-align:center;margin-top:10px;font-size:0.75em;color:var(--text-muted)">
+        Retour a l'acceuil: <a href="/" style="color:var(--text-dim)">DARKNET RP</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('password').addEventListener('keypress', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+    
+    async function doLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      
+      if (!username || !password) {
+        showAlert('alert', 'Remplis tous les champs', 'error');
+        return;
+      }
+      
+      const result = await login(username, password);
+      if (result.success) {
+        showAlert('alert', 'Connexion reussie ! Redirection...', 'success');
+        setTimeout(() => {
+          window.location.href = result.is_admin ? '/admin.html' : '/';
+        }, 1000);
+      } else {
+        showAlert('alert', result.error, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

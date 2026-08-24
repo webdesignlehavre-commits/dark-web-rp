@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARK STORE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Fira Code', monospace; background: #0a0a0f; color: #00ff41; min-height: 100vh; padding-bottom: 40px; }
+body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.03) 2px, rgba(0,255,65,0.03) 4px); pointer-events: none; z-index: 9999; }
+
+.header { background: #111118; border-bottom: 1px solid #2a2a3a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 0 30px rgba(0,255,65,0.1); }
+.logo { font-size: 1.4em; font-weight: 700; color: #ff0040; text-shadow: 0 0 20px rgba(255,0,64,0.5); letter-spacing: 3px; cursor: pointer; }
+.logo span { color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.5); }
+.nav { display: flex; gap: 15px; align-items: center; }
+.nav a, .nav button { color: #008822; text-decoration: none; font-size: 0.8em; padding: 8px 15px; border: 1px solid #2a2a3a; background: none; cursor: pointer; font-family: inherit; transition: all 0.3s; }
+.nav a:hover, .nav button:hover { border-color: #00ff41; color: #00ff41; box-shadow: 0 0 15px rgba(0,255,65,0.2); }
+.cart-btn { position: relative; border-color: #ff0040 !important; color: #ff0040 !important; }
+.admin-btn { border-color: #aa00ff !important; color: #aa00ff !important; }
+.admin-btn:hover { box-shadow: 0 0 15px rgba(170,0,255,0.3) !important; }
+.admin-active { background: rgba(170,0,255,0.15) !important; border-color: #aa00ff !important; color: #aa00ff !important; }
+.cart-count { position: absolute; top: -5px; right: -5px; background: #ff0040; color: #000; font-size: 0.65em; padding: 2px 6px; font-weight: 700; }
+
+.banner { text-align: center; padding: 40px 20px; background: linear-gradient(180deg, #111118 0%, #0a0a0f 100%); border-bottom: 1px solid #2a2a3a; }
+.banner h1 { font-size: 2.5em; color: #ff0040; text-shadow: 0 0 30px rgba(255,0,64,0.4); margin-bottom: 10px; letter-spacing: 5px; }
+.banner .tagline { color: #335544; font-size: 0.9em; }
+.banner .warning { color: #ffaa00; font-size: 0.75em; margin-top: 15px; padding: 10px; border: 1px solid #333; display: inline-block; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 30px; }
+.categories { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+.cat-btn { padding: 8px 20px; border: 1px solid #2a2a3a; background: transparent; color: #008822; font-family: inherit; font-size: 0.8em; cursor: pointer; transition: all 0.3s; }
+.cat-btn:hover, .cat-btn.active { border-color: #00ff41; color: #00ff41; background: rgba(0,255,65,0.05); }
+.section-title { color: #00ff41; font-size: 1.2em; margin: 30px 0 20px; padding-bottom: 10px; border-bottom: 1px solid #2a2a3a; display: flex; align-items: center; gap: 10px; }
+.section-title::before { content: '>'; color: #ff0040; }
+
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+.product-card { background: #15151f; border: 1px solid #2a2a3a; padding: 20px; transition: all 0.3s; position: relative; overflow: hidden; }
+.product-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #ff0040, transparent); opacity: 0; transition: opacity 0.3s; }
+.product-card:hover { border-color: #ff0040; box-shadow: 0 0 20px rgba(255,0,64,0.1); transform: translateY(-3px); }
+.product-card:hover::before { opacity: 1; }
+.product-card .badge { position: absolute; top: 10px; right: 10px; padding: 3px 8px; font-size: 0.65em; border: 1px solid #ffaa00; color: #ffaa00; }
+.product-card .badge.hot { border-color: #ff0040; color: #ff0040; }
+.product-icon { font-size: 2.5em; text-align: center; margin: 15px 0; }
+.product-name { color: #00ff41; font-size: 1em; font-weight: 600; margin-bottom: 8px; }
+.product-desc { color: #335544; font-size: 0.75em; margin-bottom: 15px; line-height: 1.5; }
+.product-footer { display: flex; justify-content: space-between; align-items: center; }
+.product-price { color: #ffaa00; font-size: 1.1em; font-weight: 700; }
+.product-price .crypto { font-size: 0.7em; color: #555; display: block; }
+.add-btn { padding: 8px 15px; border: 1px solid #00ff41; background: transparent; color: #00ff41; font-family: inherit; font-size: 0.75em; cursor: pointer; transition: all 0.3s; }
+.add-btn:hover { background: #00ff41; color: #0a0a0f; }
+.reviews { margin-top: 15px; padding-top: 10px; border-top: 1px solid #1a1a25; }
+.seller-info { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px; background: #111118; font-size: 0.7em; }
+.seller-info .online { width: 6px; height: 6px; background: #00ff41; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.cart-panel { display: none; position: fixed; top: 0; right: 0; width: 350px; height: 100%; background: #111118; border-left: 1px solid #2a2a3a; z-index: 200; padding: 20px; overflow-y: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
+.cart-panel.open { display: block; }
+.cart-panel h3 { color: #ff0040; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #2a2a3a; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #2a2a3a; margin-bottom: 10px; }
+.cart-item .remove { color: #ff0040; cursor: pointer; font-size: 0.8em; }
+.cart-total { margin-top: 20px; padding-top: 15px; border-top: 1px solid #2a2a3a; text-align: right; }
+.cart-total .amount { color: #ffaa00; font-size: 1.3em; font-weight: 700; }
+.checkout-btn { width: 100%; padding: 12px; margin-top: 15px; border: 1px solid #ff0040; background: transparent; color: #ff0040; font-family: inherit; font-size: 0.9em; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px; }
+.checkout-btn:hover { background: #ff0040; color: #000; }
+.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 199; }
+.overlay.open { display: block; }
+
+.status-bar { background: #111118; border-top: 1px solid #2a2a3a; padding: 10px 30px; display: flex; justify-content: space-between; font-size: 0.7em; color: #335544; position: fixed; bottom: 0; width: 100%; z-index: 50; }
+.status-bar .online { color: #00ff41; }
+.status-bar .threat { color: #ffaa00; }
+.footer { text-align: center; padding: 40px; color: #222; font-size: 0.7em; margin-top: 40px; border-top: 1px solid #1a1a25; }
+
+.toast { position: fixed; bottom: 60px; right: 20px; background: #15151f; border: 1px solid #00ff41; padding: 15px 20px; color: #00ff41; font-family: inherit; font-size: 0.8em; z-index: 300; transform: translateX(400px); transition: transform 0.3s; box-shadow: 0 0 20px rgba(0,255,65,0.2); }
+.toast.show { transform: translateX(0); }
+.toast.error { border-color: #ff0040; color: #ff0040; }
+
+/* Admin Panel */
+.admin-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 500; overflow-y: auto; }
+.admin-overlay.open { display: block; }
+.admin-panel { max-width: 900px; margin: 40px auto; background: #111118; border: 1px solid #aa00ff; padding: 30px; }
+.admin-panel h2 { color: #aa00ff; margin-bottom: 20px; font-size: 1.3em; display: flex; align-items: center; gap: 10px; }
+.admin-panel h2::before { content: '&#128737;'; }
+.admin-close { margin-left: auto; background: none; border: 1px solid #ff0040; color: #ff0040; padding: 5px 15px; font-family: inherit; font-size: 0.8em; cursor: pointer; }
+.admin-close:hover { background: #ff0040; color: #000; }
+
+.admin-login { max-width: 400px; margin: 100px auto; background: #111118; border: 1px solid #aa00ff; padding: 30px; text-align: center; }
+.admin-login h2 { color: #aa00ff; margin-bottom: 20px; }
+.admin-login input { width: 100%; padding: 12px; background: #0a0a0f; border: 1px solid #2a2a3a; color: #aa00ff; font-family: inherit; font-size: 1em; margin-bottom: 15px; text-align: center; letter-spacing: 5px; }
+.admin-login input:focus { outline: none; border-color: #aa00ff; box-shadow: 0 0 15px rgba(170,0,255,0.2); }
+.admin-login button { width: 100%; padding: 12px; border: 1px solid #aa00ff; background: transparent; color: #aa00ff; font-family: inherit; font-size: 0.9em; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px; }
+.admin-login button:hover { background: #aa00ff; color: #000; }
+
+.admin-products { margin-top: 20px; }
+.admin-product { display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #2a2a3a; margin-bottom: 10px; transition: all 0.3s; }
+.admin-product:hover { border-color: #aa00ff; }
+.admin-product .icon { font-size: 1.8em; min-width: 50px; text-align: center; }
+.admin-product .info { flex: 1; }
+.admin-product .info .name { color: #00ff41; font-weight: 600; margin-bottom: 3px; }
+.admin-product .info .price { color: #ffaa00; font-size: 0.85em; }
+.admin-product .info .cat { color: #555; font-size: 0.7em; }
+.admin-product .actions { display: flex; gap: 8px; }
+.admin-product .actions button { padding: 6px 12px; font-size: 0.7em; font-family: inherit; cursor: pointer; border: 1px solid; background: none; transition: all 0.3s; }
+.btn-edit { border-color: #ffaa00; color: #ffaa00; }
+.btn-edit:hover { background: #ffaa00; color: #000; }
+.btn-del { border-color: #ff0040; color: #ff0040; }
+.btn-del:hover { background: #ff0040; color: #000; }
+
+.add-product-btn { width: 100%; padding: 15px; border: 1px dashed #aa00ff; background: transparent; color: #aa00ff; font-family: inherit; font-size: 0.9em; cursor: pointer; margin-bottom: 20px; transition: all 0.3s; }
+.add-product-btn:hover { background: rgba(170,0,255,0.1); border-style: solid; }
+
+.edit-form { background: #0a0a0f; border: 1px solid #aa00ff; padding: 20px; margin-bottom: 15px; display: none; }
+.edit-form.open { display: block; }
+.edit-form h3 { color: #aa00ff; margin-bottom: 15px; font-size: 1em; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; color: #555; font-size: 0.8em; margin-bottom: 5px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: #111118; border: 1px solid #2a2a3a; color: #00ff41; font-family: inherit; font-size: 0.85em; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #aa00ff; }
+.form-group textarea { min-height: 60px; resize: vertical; }
+.form-group select option { background: #111118; color: #00ff41; }
+.icon-preview { font-size: 2em; text-align: center; margin: 10px 0; }
+.form-actions { display: flex; gap: 10px; }
+.form-actions button { flex: 1; padding: 10px; font-family: inherit; font-size: 0.8em; cursor: pointer; border: 1px solid; background: none; transition: all 0.3s; text-transform: uppercase; }
+.btn-save { border-color: #00ff41; color: #00ff41; }
+.btn-save:hover { background: #00ff41; color: #000; }
+.btn-cancel { border-color: #555; color: #555; }
+.btn-cancel:hover { background: #555; color: #000; }
+
+.emoji-picker { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; max-height: 120px; overflow-y: auto; }
+.emoji-option { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.3em; border: 1px solid #2a2a3a; cursor: pointer; transition: all 0.2s; background: #111118; }
+.emoji-option:hover { border-color: #aa00ff; background: rgba(170,0,255,0.1); }
+.emoji-option.selected { border-color: #00ff41; background: rgba(0,255,65,0.1); }
+
+@media (max-width: 768px) { .banner h1 { font-size: 1.5em; } .products-grid { grid-template-columns: 1fr; } .cart-panel { width: 100%; } .form-row { grid-template-columns: 1fr; } .admin-product { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo" onclick="location.reload()">DARK<span>STORE</span></div>
+  <div class="nav">
+    <a href="#">COMMANDES</a>
+    <a href="#">VENDEUR</a>
+    <button class="admin-btn" onclick="openAdmin()">&#128737; ADMIN</button>
+    <a href="#" class="cart-btn" onclick="toggleCart()">PANIER <span class="cart-count" id="cart-count">0</span></a>
+  </div>
+</div>
+
+<div class="banner">
+  <h1>&#128274; DARK STORE</h1>
+  <div class="tagline">Le marche noir RP. Produits garantis, livraison anonyme.</div>
+  <div class="warning">&#9888; USAGE RP UNIQUEMENT. PAS DE VRAIS ACHATS.</div>
+</div>
+
+<div class="container">
+  <div class="categories" id="categories">
+    <button class="cat-btn active" onclick="filterCat('all', this)">TOUS</button>
+    <button class="cat-btn" onclick="filterCat('hacking', this)">HACKING</button>
+    <button class="cat-btn" onclick="filterCat('weapons', this)">ARMES</button>
+    <button class="cat-btn" onclick="filterCat('drugs', this)">DROGUES</button>
+    <button class="cat-btn" onclick="filterCat('tools', this)">OUTILS</button>
+    <button class="cat-btn" onclick="filterCat('docs', this)">FAUX DOCUMENTS</button>
+  </div>
+  <div class="section-title">CATALOGUE</div>
+  <div class="products-grid" id="products"></div>
+</div>
+
+<div class="cart-panel" id="cart-panel">
+  <h3>&#128722; PANIER</h3>
+  <div id="cart-items"></div>
+  <div class="cart-total">
+    <div style="color:#555;font-size:0.8em;margin-bottom:5px">TOTAL</div>
+    <div class="amount" id="cart-total">0 &#8383;</div>
+  </div>
+  <button class="checkout-btn" onclick="checkout()">PASSER COMMANDE</button>
+  <p style="text-align:center;margin-top:15px;font-size:0.7em;color:#333">Paiement: Bitcoin / Monero</p>
+</div>
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-login" id="admin-login">
+    <h2>&#128274; ACCES ADMIN</h2>
+    <input type="password" id="admin-code" placeholder="CODE SECRET" maxlength="10" autofocus>
+    <button onclick="adminAuth()">DEVEROUILLER</button>
+    <p style="margin-top:15px;font-size:0.7em;color:#555">Code requis pour gerer les produits</p>
+  </div>
+  <div class="admin-panel" id="admin-content" style="display:none">
+    <h2>Panneau Admin <button class="admin-close" onclick="closeAdmin()">FERMER</button></h2>
+    <div class="add-product-btn" onclick="showAddForm()">+ AJOUTER UN PRODUIT</div>
+    <div class="edit-form" id="add-form">
+      <h3>&#10010; NOUVEAU PRODUIT</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>NOM</label>
+          <input type="text" id="new-name" placeholder="Nom du produit...">
+        </div>
+        <div class="form-group">
+          <label>PRIX (BTC)</label>
+          <input type="number" id="new-price" placeholder="2500" step="100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>DESCRIPTION</label>
+        <textarea id="new-desc" placeholder="Description du produit..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CATEGORIE</label>
+          <select id="new-cat">
+            <option value="hacking">HACKING</option>
+            <option value="weapons">ARMES</option>
+            <option value="drugs">DROGUES</option>
+            <option value="tools">OUTILS</option>
+            <option value="docs">FAUX DOCUMENTS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ICONE</label>
+          <div class="icon-preview" id="new-icon-preview">&#128187;</div>
+          <select id="new-icon" onchange="document.getElementById('new-icon-preview').textContent=this.value">
+            <option value="&#128187;">&#128187; Ordinateur</option>
+            <option value="&#128268;">&#128268; USB</option>
+            <option value="&#128190;">&#128190; Disque</option>
+            <option value="&#128299;">&#128299; Arme</option>
+            <option value="&#128296;">&#128296; Pistolet</option>
+            <option value="&#128298;">&#128298; Revolver</option>
+            <option value="&#127807;">&#127807; Plante</option>
+            <option value="&#10024;">&#10024; Cristal</option>
+            <option value="&#128220;">&#128220; Document</option>
+            <option value="&#128663;">&#128663; Vehicle</option>
+            <option value="&#128274;">&#128274; Cadenas</option>
+            <option value="&#128205;">&#128205; GPS</option>
+            <option value="&#128272;">&#128272; Coffre</option>
+            <option value="&#128737;">&#128737; Casque</option>
+            <option value="&#128163;">&#128163; Explosion</option>
+            <option value="&#128297;">&#128297; Munitions</option>
+            <option value="&#128188;">&#128188; Dossier</option>
+            <option value="&#128276;">&#128276; Radio</option>
+            <option value="&#128172;">&#128172; Chat</option>
+            <option value="&#128277;">&#128277; Mailing</option>
+            <option value="&#128241;">&#128241; Telephone</option>
+            <option value="&#128225;">&#128225; Micro</option>
+            <option value="&#127918;">&#127918; Jeu</option>
+            <option value="&#128142;">&#128142; Bijou</option>
+            <option value="&#128176;">&#128176; Argent</option>
+            <option value="&#128666;">&#128666; Voiture</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>BADGE (optionnel)</label>
+        <select id="new-badge">
+          <option value="">Aucun</option>
+          <option value="HOT">HOT</option>
+          <option value="NEW">NEW</option>
+          <option value="PREMIUM">PREMIUM</option>
+          <option value="TOP">TOP</option>
+          <option value="RARE">RARE</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="hideAddForm()">ANNULER</button>
+        <button class="btn-save" onclick="addProduct()">AJOUTER</button>
+      </div>
+    </div>
+    <div class="admin-products" id="admin-products"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="status-bar">
+  <div><span class="online">&#9679;</span> EN LIGNE</div>
+  <div>Vendeur: <span style="color:#00ff41">D4rkSh0p_Admin</span></div>
+  <div>Menace: <span class="threat">FAIBLE</span></div>
+  <div>TOR: Connecte</div>
+</div>
+<div class="footer">DARK STORE RP &copy; 2026 // TOUT EST FICTIF // ROLEPLAY UNIQUEMENT</div>
+
+<script>
+const ADMIN_CODE = '2023';
+let isAdmin = false;
+
+const defaultProducts = [
+  { id: 1, name: "USB Keylogger", desc: "Enregistre toutes les frappes clavier. USB discrete. Range: 10m via WiFi.", price: 2500, crypto: "0.00042 BTC", icon: "\u{1F50C}", cat: "hacking", badge: "HOT", badgeClass: "hot", seller: "TechDealer", reviews: 14, stars: 4.8 },
+  { id: 2, name: "Malware Pack v3", desc: "12 malware differs. Ransomware, trojan, keylogger. Support 30 jours.", price: 8000, crypto: "0.00134 BTC", icon: "\u{1F4BB}", cat: "hacking", badge: "NEW", badgeClass: "", seller: "VirusMaster", reviews: 7, stars: 4.5 },
+  { id: 3, name: "AK-47 Supprimee", desc: "AK-47 avec silencieux custom. Munitions 7.62 incluses (30 balles).", price: 15000, crypto: "0.00251 BTC", icon: "\u{1F52B}", cat: "weapons", badge: "", badgeClass: "", seller: "Armurier_76", reviews: 22, stars: 4.9 },
+  { id: 4, name: "Silencieux Mod.45", desc: "Silencieux universel calibre .45. Compatible Glock, USP, 1911.", price: 5000, crypto: "0.00083 BTC", icon: "\u{1F528}", cat: "weapons", badge: "", badgeClass: "", seller: "Armurier_76", reviews: 9, stars: 4.7 },
+  { id: 5, name: "Cannabis Premium", desc: "50g de Green Dragon. THC: 28%. Cultive en indoor.", price: 3000, crypto: "0.00050 BTC", icon: "\u{1F33F}", cat: "drugs", badge: "PREMIUM", badgeClass: "", seller: "GrowMaster", reviews: 31, stars: 4.6 },
+  { id: 6, name: "Methamphetamine Crystal", desc: "20g pur. Qualite Breaking Bad. Livraison sechee.", price: 7500, crypto: "0.00125 BTC", icon: "\u2728", cat: "drugs", badge: "", badgeClass: "", seller: "Chemist_X", reviews: 5, stars: 4.2 },
+  { id: 7, name: "Passeport Faux", desc: "Passeport francais tres haute qualite. Photo personnalisee.", price: 12000, crypto: "0.00200 BTC", icon: "\u{1F4DC}", cat: "docs", badge: "TOP", badgeClass: "hot", seller: "DocMaker", reviews: 18, stars: 4.9 },
+  { id: 8, name: "Permis de conduire", desc: "Permis francais avec code barre. Verifiable en ligne.", price: 4000, crypto: "0.00067 BTC", icon: "\u{1F697}", cat: "docs", badge: "", badgeClass: "", seller: "DocMaker", reviews: 12, stars: 4.4 },
+  { id: 9, name: "Lockpick Set Pro", desc: "Kit complet 32 outils. Pochette discrete. Tutoriel inclus.", price: 800, crypto: "0.00013 BTC", icon: "\u{1F512}", cat: "tools", badge: "", badgeClass: "", seller: "LockBreaker", reviews: 25, stars: 4.8 },
+  { id: 10, name: "GPS Tracker Mini", desc: "Tracker GPS 5cm. Batterie 7 jours. Suivi en temps reel.", price: 3500, crypto: "0.00058 BTC", icon: "\u{1F4CD}", cat: "tools", badge: "NEW", badgeClass: "", seller: "SpyGadgets", reviews: 8, stars: 4.3 },
+  { id: 11, name: "Flash Drive 256GB", desc: "Cle USB chiffree AES-256. Formatage a distance possible.", price: 1200, crypto: "0.00020 BTC", icon: "\u{1F4BE}", cat: "hacking", badge: "", badgeClass: "", seller: "TechDealer", reviews: 16, stars: 4.7 },
+  { id: 12, name: "Glock 19 + Munitions", desc: "Glock 19 Gen5. 3 chargeurs (45 balles). Etui de ceinture.", price: 9000, crypto: "0.00150 BTC", icon: "\u{1F52A}", cat: "weapons", badge: "", badgeClass: "", seller: "Armurier_76", reviews: 19, stars: 4.8 }
+];
+
+function getProducts() {
+  const saved = localStorage.getItem('darkstore_products');
+  if (saved) return JSON.parse(saved);
+  localStorage.setItem('darkstore_products', JSON.stringify(defaultProducts));
+  return defaultProducts;
+}
+
+function saveProducts(products) {
+  localStorage.setItem('darkstore_products', JSON.stringify(products));
+}
+
+let products = getProducts();
+let cart = [];
+let nextId = Math.max(...products.map(p => p.id)) + 1;
+
+function renderProducts(filter = 'all') {
+  const grid = document.getElementById('products');
+  const filtered = filter === 'all' ? products : products.filter(p => p.cat === filter);
+  if (filtered.length === 0) {
+    grid.innerHTML = '<p style="color:#333;text-align:center;padding:40px;grid-column:1/-1">Aucun produit dans cette categorie.</p>';
+    return;
+  }
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-card" data-cat="${p.cat}">
+      ${p.badge ? `<div class="badge ${p.badgeClass || ''}">${p.badge}</div>` : ''}
+      <div class="product-icon">${p.icon}</div>
+      <div class="product-name">${esc(p.name)}</div>
+      <div class="product-desc">${esc(p.desc)}</div>
+      <div class="reviews">
+        <span style="color:#ffaa00">${'\u2605'.repeat(Math.floor(p.stars))}${'\u2606'.repeat(5-Math.floor(p.stars))}</span>
+        <span style="color:#555">(${p.reviews} avis)</span>
+      </div>
+      <div class="seller-info">
+        <span class="online"></span>
+        <span style="color:#008822">${esc(p.seller)}</span>
+        <span style="margin-left:auto;color:#333">Verifie</span>
+      </div>
+      <div class="product-footer">
+        <div class="product-price">${p.price.toLocaleString()} \u20BF<span class="crypto">${p.crypto}</span></div>
+        <button class="add-btn" onclick="addToCart(${p.id})">+ AJOUTER</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCat(cat, btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts(cat);
+}
+
+function addToCart(id) {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+  cart.push(product);
+  updateCart();
+  showToast(product.name + ' ajoute au panier');
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  updateCart();
+}
+
+function updateCart() {
+  document.getElementById('cart-count').textContent = cart.length;
+  const items = document.getElementById('cart-items');
+  const total = cart.reduce((sum, p) => sum + p.price, 0);
+  items.innerHTML = cart.length === 0
+    ? '<p style="color:#333;text-align:center;padding:30px">Panier vide</p>'
+    : cart.map((p, i) => '<div class="cart-item"><div><div style="color:#00ff41;font-size:0.85em">' + p.icon + ' ' + esc(p.name) + '</div><div style="color:#ffaa00;font-size:0.75em">' + p.price.toLocaleString() + ' \u20BF</div></div><span class="remove" onclick="removeFromCart(' + i + ')">&#10006;</span></div>').join('');
+  document.getElementById('cart-total').textContent = total.toLocaleString() + ' \u20BF';
+}
+
+function toggleCart() {
+  document.getElementById('cart-panel').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+function checkout() {
+  if (cart.length === 0) return showToast('Panier vide !');
+  const total = cart.reduce((sum, p) => sum + p.price, 0);
+  showToast('Commande passee ! Total: ' + total.toLocaleString() + ' BTC');
+  cart = [];
+  updateCart();
+  toggleCart();
+}
+
+function showToast(msg, isError) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => toast.className = 'toast', 3000);
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// === ADMIN ===
+function openAdmin() {
+  document.getElementById('admin-overlay').classList.add('open');
+  if (isAdmin) showAdminPanel();
+}
+
+function closeAdmin() {
+  document.getElementById('admin-overlay').classList.remove('open');
+}
+
+function adminAuth() {
+  const code = document.getElementById('admin-code').value;
+  if (code === ADMIN_CODE) {
+    isAdmin = true;
+    showAdminPanel();
+    showToast('Admin connecte !');
+  } else {
+    showToast('Code incorrect !', true);
+    document.getElementById('admin-code').value = '';
+  }
+}
+
+function showAdminPanel() {
+  document.getElementById('admin-login').style.display = 'none';
+  document.getElementById('admin-content').style.display = 'block';
+  renderAdminProducts();
+}
+
+function renderAdminProducts() {
+  const container = document.getElementById('admin-products');
+  container.innerHTML = products.map(p => `
+    <div class="admin-product" id="aprod-${p.id}">
+      <div class="icon">${p.icon}</div>
+      <div class="info">
+        <div class="name">${esc(p.name)}</div>
+        <div class="price">${p.price.toLocaleString()} \u20BF (${p.crypto})</div>
+        <div class="cat">${p.cat} ${p.badge ? '| ' + p.badge : ''}</div>
+      </div>
+      <div class="actions">
+        <button class="btn-edit" onclick="editProduct(${p.id})">&#9998; EDIT</button>
+        <button class="btn-del" onclick="deleteProduct(${p.id})">&#10006; SUPPR</button>
+      </div>
+    </div>
+    <div class="edit-form" id="edit-form-${p.id}">
+      <h3>&#9998; Modifier: ${esc(p.name)}</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>NOM</label>
+          <input type="text" id="edit-name-${p.id}" value="${esc(p.name)}">
+        </div>
+        <div class="form-group">
+          <label>PRIX (BTC)</label>
+          <input type="number" id="edit-price-${p.id}" value="${p.price}" step="100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>DESCRIPTION</label>
+        <textarea id="edit-desc-${p.id}">${esc(p.desc)}</textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CATEGORIE</label>
+          <select id="edit-cat-${p.id}">
+            <option value="hacking" ${p.cat==='hacking'?'selected':''}>HACKING</option>
+            <option value="weapons" ${p.cat==='weapons'?'selected':''}>ARMES</option>
+            <option value="drugs" ${p.cat==='drugs'?'selected':''}>DROGUES</option>
+            <option value="tools" ${p.cat==='tools'?'selected':''}>OUTILS</option>
+            <option value="docs" ${p.cat==='docs'?'selected':''}>FAUX DOCUMENTS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ICONE</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.8em" id="edit-icon-prev-${p.id}">${p.icon}</span>
+            <select id="edit-icon-${p.id}" onchange="document.getElementById('edit-icon-prev-${p.id}').textContent=this.value">
+              ${getIconOptions(p.icon)}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>BADGE</label>
+        <select id="edit-badge-${p.id}">
+          <option value="">Aucun</option>
+          <option value="HOT" ${p.badge==='HOT'?'selected':''}>HOT</option>
+          <option value="NEW" ${p.badge==='NEW'?'selected':''}>NEW</option>
+          <option value="PREMIUM" ${p.badge==='PREMIUM'?'selected':''}>PREMIUM</option>
+          <option value="TOP" ${p.badge==='TOP'?'selected':''}>TOP</option>
+          <option value="RARE" ${p.badge==='RARE'?'selected':''}>RARE</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="hideEditForm(${p.id})">ANNULER</button>
+        <button class="btn-save" onclick="saveEdit(${p.id})">SAUVEGARDER</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getIconOptions(selected) {
+  const icons = [
+    ['\u{1F4BB}','Ordinateur'],['\u{1F50C}','USB'],['\u{1F4BE}','Disquette'],['\u{1F52B}','Arme'],
+    ['\u{1F528}','Pistolet'],['\u{1F52A}','Revolver'],['\u{1F33F}','Plante'],['\u2728','Cristal'],
+    ['\u{1F4DC}','Document'],['\u{1F697}','Vehicle'],['\u{1F512}','Cadenas'],['\u{1F4CD}','GPS'],
+    ['\u{1F48E}','Coffre'],['\u{1F6E1}','Bouclier'],['\u{1F4A3}','Explosion'],['\u{1F4E6}','Colis'],
+    ['\u{1F3AF}','Cible'],['\u{1F576}','Lunettes'],['\u{1F3AD}','Masque'],['\u{1F916}','Robot'],
+    ['\u{1F4F1}','Telephone'],['\u{1F4E2}','Megaphone'],['\u{1F48D}','Bague'],['\u{1F4B0}','Argent'],
+    ['\u{1F697}','Voiture'],['\u{1F3CE}','Racecar'],['\u{26F5}','Bateau'],['\u{2708}','Avion']
+  ];
+  return icons.map(([e, n]) => '<option value="'+e+'" '+(e===selected?'selected':'')+'>'+e+' '+n+'</option>').join('');
+}
+
+function editProduct(id) {
+  document.querySelectorAll('.edit-form').forEach(f => f.classList.remove('open'));
+  const form = document.getElementById('edit-form-' + id);
+  form.classList.add('open');
+  form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function hideEditForm(id) {
+  document.getElementById('edit-form-' + id).classList.remove('open');
+}
+
+function saveEdit(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  p.name = document.getElementById('edit-name-' + id).value;
+  p.price = parseInt(document.getElementById('edit-price-' + id).value) || 0;
+  p.desc = document.getElementById('edit-desc-' + id).value;
+  p.cat = document.getElementById('edit-cat-' + id).value;
+  p.icon = document.getElementById('edit-icon-' + id).value;
+  p.badge = document.getElementById('edit-badge-' + id).value;
+  const btcRate = 0.000167;
+  p.crypto = (p.price * btcRate).toFixed(5) + ' BTC';
+  saveProducts(products);
+  renderProducts();
+  renderAdminProducts();
+  showToast('Produit modifie !');
+}
+
+function deleteProduct(id) {
+  if (!confirm('Supprimer ce produit ?')) return;
+  products = products.filter(p => p.id !== id);
+  saveProducts(products);
+  renderProducts();
+  renderAdminProducts();
+  showToast('Produit supprime !');
+}
+
+function showAddForm() {
+  document.getElementById('add-form').classList.add('open');
+  document.getElementById('add-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideAddForm() {
+  document.getElementById('add-form').classList.remove('open');
+}
+
+function addProduct() {
+  const name = document.getElementById('new-name').value.trim();
+  const price = parseInt(document.getElementById('new-price').value) || 0;
+  const desc = document.getElementById('new-desc').value.trim();
+  const cat = document.getElementById('new-cat').value;
+  const icon = document.getElementById('new-icon').value;
+  const badge = document.getElementById('new-badge').value;
+
+  if (!name) return showToast('Donne un nom !', true);
+  if (!price) return showToast('Donne un prix !', true);
+
+  const btcRate = 0.000167;
+  const product = {
+    id: nextId++,
+    name, desc: desc || 'Description non definie.', price, cat, icon,
+    crypto: (price * btcRate).toFixed(5) + ' BTC',
+    badge, badgeClass: badge === 'HOT' ? 'hot' : '',
+    seller: 'D4rkSh0p_Admin', reviews: 0, stars: 5.0
+  };
+
+  products.push(product);
+  saveProducts(products);
+  renderProducts();
+  renderAdminProducts();
+  hideAddForm();
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-price').value = '';
+  document.getElementById('new-desc').value = '';
+  showToast('Produit ajoute !');
+}
+
+document.getElementById('admin-code').addEventListener('keypress', e => { if (e.key === 'Enter') adminAuth(); });
+
+renderProducts();
+updateCart();
+</script>
+</body>
+</html>

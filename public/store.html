@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARK STORE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Fira Code', monospace; background: #0a0a0f; color: #00ff41; min-height: 100vh; padding-bottom: 40px; }
+body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.03) 2px, rgba(0,255,65,0.03) 4px); pointer-events: none; z-index: 9999; }
+.header { background: #111118; border-bottom: 1px solid #2a2a3a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 0 30px rgba(0,255,65,0.1); }
+.logo { font-size: 1.4em; font-weight: 700; color: #ff0040; text-shadow: 0 0 20px rgba(255,0,64,0.5); letter-spacing: 3px; cursor: pointer; text-decoration: none; }
+.logo span { color: #00ff41; }
+.nav { display: flex; gap: 15px; align-items: center; }
+.nav a, .nav button { color: #008822; text-decoration: none; font-size: 0.8em; padding: 8px 15px; border: 1px solid #2a2a3a; background: none; cursor: pointer; font-family: inherit; transition: all 0.3s; }
+.nav a:hover, .nav button:hover { border-color: #00ff41; color: #00ff41; }
+.cart-btn { position: relative; border-color: #ff0040 !important; color: #ff0040 !important; }
+.admin-btn { border-color: #aa00ff !important; color: #aa00ff !important; }
+.cart-count { position: absolute; top: -5px; right: -5px; background: #ff0040; color: #000; font-size: 0.65em; padding: 2px 6px; font-weight: 700; }
+.banner { text-align: center; padding: 40px 20px; background: linear-gradient(180deg, #111118 0%, #0a0a0f 100%); border-bottom: 1px solid #2a2a3a; }
+.banner h1 { font-size: 2.5em; color: #ff0040; text-shadow: 0 0 30px rgba(255,0,64,0.4); margin-bottom: 10px; letter-spacing: 5px; }
+.banner .tagline { color: #335544; font-size: 0.9em; }
+.banner .warning { color: #ffaa00; font-size: 0.75em; margin-top: 15px; padding: 10px; border: 1px solid #333; display: inline-block; }
+.container { max-width: 1100px; margin: 0 auto; padding: 30px; }
+.categories { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+.cat-btn { padding: 8px 20px; border: 1px solid #2a2a3a; background: transparent; color: #008822; font-family: inherit; font-size: 0.8em; cursor: pointer; transition: all 0.3s; }
+.cat-btn:hover, .cat-btn.active { border-color: #00ff41; color: #00ff41; background: rgba(0,255,65,0.05); }
+.section-title { color: #00ff41; font-size: 1.2em; margin: 30px 0 20px; padding-bottom: 10px; border-bottom: 1px solid #2a2a3a; display: flex; align-items: center; gap: 10px; }
+.section-title::before { content: '>'; color: #ff0040; }
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+.product-card { background: #15151f; border: 1px solid #2a2a3a; padding: 20px; transition: all 0.3s; position: relative; overflow: hidden; }
+.product-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #ff0040, transparent); opacity: 0; transition: opacity 0.3s; }
+.product-card:hover { border-color: #ff0040; box-shadow: 0 0 20px rgba(255,0,64,0.1); transform: translateY(-3px); }
+.product-card:hover::before { opacity: 1; }
+.product-card .badge { position: absolute; top: 10px; right: 10px; padding: 3px 8px; font-size: 0.65em; border: 1px solid #ffaa00; color: #ffaa00; }
+.product-card .badge.hot { border-color: #ff0040; color: #ff0040; }
+.product-icon { font-size: 2.5em; text-align: center; margin: 15px 0; }
+.product-name { color: #00ff41; font-size: 1em; font-weight: 600; margin-bottom: 8px; }
+.product-desc { color: #335544; font-size: 0.75em; margin-bottom: 15px; line-height: 1.5; }
+.product-footer { display: flex; justify-content: space-between; align-items: center; }
+.product-price { color: #ffaa00; font-size: 1.1em; font-weight: 700; }
+.product-price .crypto { font-size: 0.7em; color: #555; display: block; }
+.add-btn { padding: 8px 15px; border: 1px solid #00ff41; background: transparent; color: #00ff41; font-family: inherit; font-size: 0.75em; cursor: pointer; transition: all 0.3s; }
+.add-btn:hover { background: #00ff41; color: #0a0a0f; }
+.reviews { margin-top: 15px; padding-top: 10px; border-top: 1px solid #1a1a25; }
+.seller-info { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px; background: #111118; font-size: 0.7em; }
+.seller-info .online { width: 6px; height: 6px; background: #00ff41; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.cart-panel { display: none; position: fixed; top: 0; right: 0; width: 350px; height: 100%; background: #111118; border-left: 1px solid #2a2a3a; z-index: 200; padding: 20px; overflow-y: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
+.cart-panel.open { display: block; }
+.cart-panel h3 { color: #ff0040; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #2a2a3a; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #2a2a3a; margin-bottom: 10px; }
+.cart-item .remove { color: #ff0040; cursor: pointer; }
+.cart-total { margin-top: 20px; padding-top: 15px; border-top: 1px solid #2a2a3a; text-align: right; }
+.cart-total .amount { color: #ffaa00; font-size: 1.3em; font-weight: 700; }
+.checkout-btn { width: 100%; padding: 12px; margin-top: 15px; border: 1px solid #ff0040; background: transparent; color: #ff0040; font-family: inherit; font-size: 0.9em; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px; }
+.checkout-btn:hover { background: #ff0040; color: #000; }
+.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 199; }
+.overlay.open { display: block; }
+.status-bar { background: #111118; border-top: 1px solid #2a2a3a; padding: 10px 30px; display: flex; justify-content: space-between; font-size: 0.7em; color: #335544; position: fixed; bottom: 0; width: 100%; z-index: 50; }
+.status-bar .online { color: #00ff41; }
+.status-bar .threat { color: #ffaa00; }
+.footer { text-align: center; padding: 40px; color: #222; font-size: 0.7em; margin-top: 40px; border-top: 1px solid #1a1a25; }
+.toast { position: fixed; bottom: 60px; right: 20px; background: #15151f; border: 1px solid #00ff41; padding: 15px 20px; color: #00ff41; font-family: inherit; font-size: 0.8em; z-index: 300; transform: translateX(400px); transition: transform 0.3s; box-shadow: 0 0 20px rgba(0,255,65,0.2); }
+.toast.show { transform: translateX(0); }
+.toast.error { border-color: #ff0040; color: #ff0040; }
+.admin-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 500; overflow-y: auto; }
+.admin-overlay.open { display: block; }
+.admin-login { max-width: 400px; margin: 100px auto; background: #111118; border: 1px solid #aa00ff; padding: 30px; text-align: center; }
+.admin-login h2 { color: #aa00ff; margin-bottom: 20px; }
+.admin-login input { width: 100%; padding: 12px; background: #0a0a0f; border: 1px solid #2a2a3a; color: #aa00ff; font-family: inherit; font-size: 1em; margin-bottom: 15px; text-align: center; letter-spacing: 5px; }
+.admin-login input:focus { outline: none; border-color: #aa00ff; }
+.admin-login button { width: 100%; padding: 12px; border: 1px solid #aa00ff; background: transparent; color: #aa00ff; font-family: inherit; font-size: 0.9em; cursor: pointer; transition: all 0.3s; text-transform: uppercase; }
+.admin-login button:hover { background: #aa00ff; color: #000; }
+.admin-panel { max-width: 900px; margin: 40px auto; background: #111118; border: 1px solid #aa00ff; padding: 30px; }
+.admin-panel h2 { color: #aa00ff; margin-bottom: 20px; font-size: 1.3em; }
+.admin-close { margin-left: auto; background: none; border: 1px solid #ff0040; color: #ff0040; padding: 5px 15px; font-family: inherit; font-size: 0.8em; cursor: pointer; float: right; }
+.admin-close:hover { background: #ff0040; color: #000; }
+.admin-product { display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #2a2a3a; margin-bottom: 10px; }
+.admin-product:hover { border-color: #aa00ff; }
+.admin-product .icon { font-size: 1.8em; min-width: 50px; text-align: center; }
+.admin-product .info { flex: 1; }
+.admin-product .info .name { color: #00ff41; font-weight: 600; }
+.admin-product .info .price { color: #ffaa00; font-size: 0.85em; }
+.admin-product .info .cat { color: #555; font-size: 0.7em; }
+.admin-product .actions { display: flex; gap: 8px; }
+.admin-product .actions button { padding: 6px 12px; font-size: 0.7em; font-family: inherit; cursor: pointer; border: 1px solid; background: none; transition: all 0.3s; }
+.btn-edit { border-color: #ffaa00; color: #ffaa00; }
+.btn-edit:hover { background: #ffaa00; color: #000; }
+.btn-del { border-color: #ff0040; color: #ff0040; }
+.btn-del:hover { background: #ff0040; color: #000; }
+.add-product-btn { width: 100%; padding: 15px; border: 1px dashed #aa00ff; background: transparent; color: #aa00ff; font-family: inherit; font-size: 0.9em; cursor: pointer; margin-bottom: 20px; transition: all 0.3s; }
+.add-product-btn:hover { background: rgba(170,0,255,0.1); border-style: solid; }
+.edit-form { background: #0a0a0f; border: 1px solid #aa00ff; padding: 20px; margin-bottom: 15px; display: none; }
+.edit-form.open { display: block; }
+.edit-form h3 { color: #aa00ff; margin-bottom: 15px; font-size: 1em; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; color: #555; font-size: 0.8em; margin-bottom: 5px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: #111118; border: 1px solid #2a2a3a; color: #00ff41; font-family: inherit; font-size: 0.85em; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #aa00ff; }
+.form-group textarea { min-height: 60px; resize: vertical; }
+.form-group select option { background: #111118; color: #00ff41; }
+.form-actions { display: flex; gap: 10px; }
+.form-actions button { flex: 1; padding: 10px; font-family: inherit; font-size: 0.8em; cursor: pointer; border: 1px solid; background: none; transition: all 0.3s; text-transform: uppercase; }
+.btn-save { border-color: #00ff41; color: #00ff41; }
+.btn-save:hover { background: #00ff41; color: #000; }
+.btn-cancel { border-color: #555; color: #555; }
+.btn-cancel:hover { background: #555; color: #000; }
+@media (max-width: 768px) { .banner h1 { font-size: 1.5em; } .products-grid { grid-template-columns: 1fr; } .cart-panel { width: 100%; } .form-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="/" class="logo">DARK<span>STORE</span></a>
+  <div class="nav">
+    <a href="/">PORTAIL</a>
+    <button class="admin-btn" onclick="openAdmin()">&#128737; ADMIN</button>
+    <a href="#" class="cart-btn" onclick="toggleCart()">PANIER <span class="cart-count" id="cart-count">0</span></a>
+  </div>
+</div>
+<div class="banner">
+  <h1>&#128274; DARK STORE</h1>
+  <div class="tagline">Le marche noir RP. Produits garantis, livraison anonyme.</div>
+  <div class="warning">&#9888; USAGE RP UNIQUEMENT. PAS DE VRAIS ACHATS.</div>
+</div>
+<div class="container">
+  <div class="categories" id="categories">
+    <button class="cat-btn active" onclick="filterCat('all', this)">TOUS</button>
+    <button class="cat-btn" onclick="filterCat('hacking', this)">HACKING</button>
+    <button class="cat-btn" onclick="filterCat('weapons', this)">ARMES</button>
+    <button class="cat-btn" onclick="filterCat('drugs', this)">DROGUES</button>
+    <button class="cat-btn" onclick="filterCat('tools', this)">OUTILS</button>
+    <button class="cat-btn" onclick="filterCat('docs', this)">FAUX DOCUMENTS</button>
+  </div>
+  <div class="section-title">CATALOGUE</div>
+  <div class="products-grid" id="products"><p style="color:#333;text-align:center;grid-column:1/-1;padding:40px">Chargement...</p></div>
+</div>
+<div class="cart-panel" id="cart-panel">
+  <h3>&#128722; PANIER</h3>
+  <div id="cart-items"></div>
+  <div class="cart-total"><div style="color:#555;font-size:0.8em;margin-bottom:5px">TOTAL</div><div class="amount" id="cart-total">0 &#8383;</div></div>
+  <button class="checkout-btn" onclick="checkout()">PASSER COMMANDE</button>
+  <p style="text-align:center;margin-top:15px;font-size:0.7em;color:#333">Paiement: Bitcoin / Monero</p>
+</div>
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+
+<!-- Admin -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-login" id="admin-login">
+    <h2>&#128274; ACCES ADMIN STORE</h2>
+    <input type="password" id="admin-code" placeholder="CODE SECRET" maxlength="10">
+    <button onclick="adminAuth()">DEVEROUILLER</button>
+  </div>
+  <div class="admin-panel" id="admin-content" style="display:none">
+    <h2>&#128737; GESTION STORE <button class="admin-close" onclick="closeAdmin()">FERMER</button></h2>
+    <div style="clear:both"></div>
+    <div class="add-product-btn" onclick="showAddForm()">+ AJOUTER UN PRODUIT</div>
+    <div class="edit-form" id="add-form">
+      <h3>&#10010; NOUVEAU PRODUIT</h3>
+      <div class="form-row">
+        <div class="form-group"><label>NOM</label><input type="text" id="new-name" placeholder="Nom du produit..."></div>
+        <div class="form-group"><label>PRIX (BTC)</label><input type="number" id="new-price" placeholder="2500" step="100"></div>
+      </div>
+      <div class="form-group"><label>DESCRIPTION</label><textarea id="new-desc" placeholder="Description..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>CATEGORIE</label>
+          <select id="new-cat"><option value="hacking">HACKING</option><option value="weapons">ARMES</option><option value="drugs">DROGUES</option><option value="tools">OUTILS</option><option value="docs">FAUX DOCUMENTS</option></select>
+        </div>
+        <div class="form-group"><label>ICONE (emoji)</label>
+          <input type="text" id="new-icon" placeholder="&#128187;" value="&#128187;">
+        </div>
+      </div>
+      <div class="form-group"><label>BADGE</label>
+        <select id="new-badge"><option value="">Aucun</option><option value="HOT">HOT</option><option value="NEW">NEW</option><option value="PREMIUM">PREMIUM</option><option value="TOP">TOP</option><option value="RARE">RARE</option></select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="hideAddForm()">ANNULER</button>
+        <button class="btn-save" onclick="addProduct()">AJOUTER</button>
+      </div>
+    </div>
+    <div id="admin-products"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="status-bar">
+  <div><span class="online">&#9679;</span> EN LIGNE</div>
+  <div>Vendeur: <span style="color:#00ff41">D4rkSh0p_Admin</span></div>
+  <div>Menace: <span class="threat">FAIBLE</span></div>
+  <div>TOR: Connecte</div>
+</div>
+<div class="footer">DARK STORE RP &copy; 2026 // TOUT EST FICTIF // ROLEPLAY UNIQUEMENT</div>
+
+<script>
+const ADMIN_CODE = '2023';
+let products = [];
+let cart = [];
+let authToken = localStorage.getItem('darkweb_token');
+let isAdmin = false;
+
+async function api(url, method = 'GET', body = null) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
+  return res.json();
+}
+
+async function loadProducts() {
+  products = await api('/api/store/products');
+  renderProducts();
+}
+
+function renderProducts(filter = 'all') {
+  const grid = document.getElementById('products');
+  const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+  if (filtered.length === 0) { grid.innerHTML = '<p style="color:#333;text-align:center;grid-column:1/-1;padding:40px">Aucun produit.</p>'; return; }
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-card">
+      ${p.badge ? `<div class="badge ${p.badge_class || ''}">${p.badge}</div>` : ''}
+      <div class="product-icon">${p.icon}</div>
+      <div class="product-name">${esc(p.name)}</div>
+      <div class="product-desc">${esc(p.description)}</div>
+      <div class="reviews">
+        <span style="color:#ffaa00">${'\u2605'.repeat(Math.floor(p.stars))}${'\u2606'.repeat(5-Math.floor(p.stars))}</span>
+        <span style="color:#555">(${p.reviews} avis)</span>
+      </div>
+      <div class="seller-info"><span class="online"></span><span style="color:#008822">${esc(p.seller)}</span><span style="margin-left:auto;color:#333">Verifie</span></div>
+      <div class="product-footer">
+        <div class="product-price">${p.price.toLocaleString()} &#8383;<span class="crypto">${p.crypto}</span></div>
+        <button class="add-btn" onclick="addToCart(${p.id})">+ AJOUTER</button>
+      </div>
+    </div>`).join('');
+}
+
+function filterCat(cat, btn) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderProducts(cat); }
+function addToCart(id) { const p = products.find(x => x.id === id); if(p){cart.push(p);updateCart();showToast(p.name+' ajoute au panier');} }
+function removeFromCart(i) { cart.splice(i,1); updateCart(); }
+function updateCart() {
+  document.getElementById('cart-count').textContent = cart.length;
+  const items = document.getElementById('cart-items');
+  const total = cart.reduce((s,p) => s+p.price, 0);
+  items.innerHTML = cart.length === 0 ? '<p style="color:#333;text-align:center;padding:30px">Panier vide</p>' : cart.map((p,i) => `<div class="cart-item"><div><div style="color:#00ff41;font-size:0.85em">${p.icon} ${esc(p.name)}</div><div style="color:#ffaa00;font-size:0.75em">${p.price.toLocaleString()} &#8383;</div></div><span class="remove" onclick="removeFromCart(${i})">&#10006;</span></div>`).join('');
+  document.getElementById('cart-total').textContent = total.toLocaleString() + ' &#8383;';
+}
+function toggleCart() { document.getElementById('cart-panel').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
+function checkout() { if(cart.length===0)return showToast('Panier vide !',true); const t=cart.reduce((s,p)=>s+p.price,0); showToast('Commande passee ! Total: '+t.toLocaleString()+' BTC'); cart=[];updateCart();toggleCart(); }
+function showToast(msg, err) { const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' error':'');setTimeout(()=>t.className='toast',3000); }
+function esc(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+// Admin
+async function openAdmin() {
+  document.getElementById('admin-overlay').classList.add('open');
+  if (isAdmin) { document.getElementById('admin-login').style.display='none'; document.getElementById('admin-content').style.display='block'; renderAdminProducts(); }
+}
+function closeAdmin() { document.getElementById('admin-overlay').classList.remove('open'); }
+async function adminAuth() {
+  const code = document.getElementById('admin-code').value;
+  if (code === ADMIN_CODE) {
+    isAdmin = true;
+    document.getElementById('admin-login').style.display='none';
+    document.getElementById('admin-content').style.display='block';
+    renderAdminProducts();
+    showToast('Admin connecte !');
+  } else { showToast('Code incorrect !', true); document.getElementById('admin-code').value=''; }
+}
+
+function renderAdminProducts() {
+  const c = document.getElementById('admin-products');
+  c.innerHTML = products.map(p => `
+    <div class="admin-product">
+      <div class="icon">${p.icon}</div>
+      <div class="info">
+        <div class="name">${esc(p.name)}</div>
+        <div class="price">${p.price.toLocaleString()} &#8383;</div>
+        <div class="cat">${p.category} ${p.badge?'| '+p.badge:''}</div>
+      </div>
+      <div class="actions">
+        <button class="btn-edit" onclick="editProduct(${p.id})">&#9998; EDIT</button>
+        <button class="btn-del" onclick="deleteProduct(${p.id})">&#10006; SUPPR</button>
+      </div>
+    </div>
+    <div class="edit-form" id="edit-form-${p.id}">
+      <h3>&#9998; Modifier: ${esc(p.name)}</h3>
+      <div class="form-row">
+        <div class="form-group"><label>NOM</label><input type="text" id="e-name-${p.id}" value="${esc(p.name)}"></div>
+        <div class="form-group"><label>PRIX</label><input type="number" id="e-price-${p.id}" value="${p.price}"></div>
+      </div>
+      <div class="form-group"><label>DESCRIPTION</label><textarea id="e-desc-${p.id}">${esc(p.description)}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>CATEGORIE</label>
+          <select id="e-cat-${p.id}"><option value="hacking" ${p.category==='hacking'?'selected':''}>HACKING</option><option value="weapons" ${p.category==='weapons'?'selected':''}>ARMES</option><option value="drugs" ${p.category==='drugs'?'selected':''}>DROGUES</option><option value="tools" ${p.category==='tools'?'selected':''}>OUTILS</option><option value="docs" ${p.category==='docs'?'selected':''}>FAUX DOCUMENTS</option></select>
+        </div>
+        <div class="form-group"><label>ICONE (emoji)</label><input type="text" id="e-icon-${p.id}" value="${p.icon}"></div>
+      </div>
+      <div class="form-group"><label>BADGE</label>
+        <select id="e-badge-${p.id}"><option value="">Aucun</option><option value="HOT" ${p.badge==='HOT'?'selected':''}>HOT</option><option value="NEW" ${p.badge==='NEW'?'selected':''}>NEW</option><option value="PREMIUM" ${p.badge==='PREMIUM'?'selected':''}>PREMIUM</option><option value="TOP" ${p.badge==='TOP'?'selected':''}>TOP</option><option value="RARE" ${p.badge==='RARE'?'selected':''}>RARE</option></select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="document.getElementById('edit-form-${p.id}').classList.remove('open')">ANNULER</button>
+        <button class="btn-save" onclick="saveEdit(${p.id})">SAUVEGARDER</button>
+      </div>
+    </div>`).join('');
+}
+
+function editProduct(id) { document.querySelectorAll('.edit-form').forEach(f=>f.classList.remove('open')); const f=document.getElementById('edit-form-'+id);f.classList.add('open');f.scrollIntoView({behavior:'smooth',block:'center'}); }
+
+async function saveEdit(id) {
+  const p = products.find(x=>x.id===id); if(!p)return;
+  const btcRate = 0.000167;
+  await api('/api/store/products/'+id, 'PUT', {
+    name: document.getElementById('e-name-'+id).value,
+    description: document.getElementById('e-desc-'+id).value,
+    price: parseInt(document.getElementById('e-price-'+id).value)||0,
+    crypto: ((parseInt(document.getElementById('e-price-'+id).value)||0)*btcRate).toFixed(5)+' BTC',
+    icon: document.getElementById('e-icon-'+id).value,
+    category: document.getElementById('e-cat-'+id).value,
+    badge: document.getElementById('e-badge-'+id).value,
+    badge_class: document.getElementById('e-badge-'+id).value === 'HOT' ? 'hot' : '',
+    seller: p.seller
+  });
+  await loadProducts();
+  showToast('Produit modifie !');
+}
+
+async function deleteProduct(id) {
+  if(!confirm('Supprimer ce produit ?'))return;
+  await api('/api/store/products/'+id, 'DELETE');
+  await loadProducts();
+  showToast('Produit supprime !');
+}
+
+function showAddForm() { document.getElementById('add-form').classList.add('open'); }
+function hideAddForm() { document.getElementById('add-form').classList.remove('open'); }
+
+async function addProduct() {
+  const name = document.getElementById('new-name').value.trim();
+  const price = parseInt(document.getElementById('new-price').value)||0;
+  if(!name)return showToast('Donne un nom !',true);
+  if(!price)return showToast('Donne un prix !',true);
+  const btcRate = 0.000167;
+  await api('/api/store/products', 'POST', {
+    name, description: document.getElementById('new-desc').value.trim()||'',
+    price, crypto: (price*btcRate).toFixed(5)+' BTC',
+    icon: document.getElementById('new-icon').value||'\u{1F4BB}',
+    category: document.getElementById('new-cat').value,
+    badge: document.getElementById('new-badge').value,
+    badge_class: document.getElementById('new-badge').value==='HOT'?'hot':''
+  });
+  await loadProducts();
+  hideAddForm();
+  document.getElementById('new-name').value='';document.getElementById('new-price').value='';document.getElementById('new-desc').value='';
+  showToast('Produit ajoute !');
+}
+
+document.getElementById('admin-code').addEventListener('keypress', e=>{if(e.key==='Enter')adminAuth();});
+loadProducts();
+updateCart();
+</script>
+</body>
+</html>

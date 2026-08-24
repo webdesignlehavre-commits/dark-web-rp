@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DARKNET // Panel Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="logo" style="text-decoration:none">DARK<span>NET</span></a>
+    <nav>
+      <div id="auth-buttons" style="display:none"></div>
+      <div id="user-buttons" style="display:none;gap:10px"></div>
+    </nav>
+  </div>
+
+  <div class="warning-banner">
+    &#128737; PANEL ADMIN - Acces restreint. Code: 2022
+  </div>
+
+  <div class="container">
+    <div class="section-title" style="font-size:1.5em">&#128737; PANNEAU D'ADMINISTRATION</div>
+    
+    <div id="admin-alert"></div>
+    
+    <div class="stats-bar" id="stats"></div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:10px;margin:30px 0">
+      <button class="btn" id="tab-pending" onclick="showTab('pending')" style="flex:1">EN ATTENTE</button>
+      <button class="btn" id="tab-all" onclick="showTab('all')" style="flex:1">TOUS LES SITES</button>
+    </div>
+
+    <!-- Pending Sites -->
+    <div id="view-pending">
+      <div class="section-title">SITES EN ATTENTE DE VALIDATION</div>
+      <div class="admin-grid" id="pending-sites"></div>
+    </div>
+
+    <!-- All Sites -->
+    <div id="view-all" style="display:none">
+      <div class="section-title">TOUS LES SITES</div>
+      <div class="admin-grid" id="all-sites"></div>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // Check admin access
+    async function init() {
+      if (!authToken) {
+        window.location.href = '/login.html';
+        return;
+      }
+      const me = await api('/api/me');
+      if (!me.is_admin) {
+        document.querySelector('.container').innerHTML = `
+          <div class="form-container" style="margin-top:50px">
+            <h2 style="color:var(--accent-red)">&#128683; ACCES REFUSE</h2>
+            <p style="text-align:center;color:var(--text-dim);margin:20px 0">Tu n'es pas admin. Code secret requis.</p>
+            
+            <div class="form-group">
+              <label>CODE SECRET</label>
+              <input type="password" id="admin-code" placeholder="Entrez le code admin...">
+            </div>
+            <button class="btn" onclick="adminLogin()">CONNEXION ADMIN</button>
+          </div>
+        `;
+        return;
+      }
+      loadStats();
+      loadPendingSites();
+    }
+    
+    async function adminLogin() {
+      const code = document.getElementById('admin-code').value;
+      const result = await login('admin', code);
+      if (result.success && result.is_admin) {
+        window.location.reload();
+      } else {
+        alert('Code incorrect !');
+      }
+    }
+    
+    function showTab(tab) {
+      document.getElementById('view-pending').style.display = tab === 'pending' ? 'block' : 'none';
+      document.getElementById('view-all').style.display = tab === 'all' ? 'block' : 'none';
+      
+      if (tab === 'all') loadAllSitesAdmin();
+      if (tab === 'pending') loadPendingSites();
+    }
+    
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DARKNET // Creer un site</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="logo" style="text-decoration:none">DARK<span>NET</span></a>
+    <nav>
+      <div id="auth-buttons" style="display:none"></div>
+      <div id="user-buttons" style="display:none;gap:10px"></div>
+    </nav>
+  </div>
+
+  <div class="warning-banner">
+    &#9888; Les sites sont soumis a validation par l'ADMIN avant publication. &#9888;
+  </div>
+
+  <div class="container">
+    <div class="form-container" style="max-width:900px">
+      <h2>&#128187; CREER UN SITE DARKNET</h2>
+      <div id="alert"></div>
+
+      <div class="form-group">
+        <label>NOM DU SITE</label>
+        <input type="text" id="site-name" placeholder="Ex: Mon Marche Noir...">
+      </div>
+
+      <div class="form-group">
+        <label>DESCRIPTION</label>
+        <input type="text" id="site-desc" placeholder="Description courte du site...">
+      </div>
+
+      <div class="code-editor">
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab('html')">HTML</div>
+          <div class="tab" onclick="switchTab('css')">CSS</div>
+          <div class="tab" onclick="switchTab('js')">JavaScript</div>
+        </div>
+        <textarea id="code-html" placeholder="<!-- Ton HTML ici -->" style="display:block"></textarea>
+        <textarea id="code-css" placeholder="/* Ton CSS ici */" style="display:none"></textarea>
+        <textarea id="code-js" placeholder="// Ton JS ici" style="display:none"></textarea>
+      </div>
+
+      <button class="btn" onclick="submitSiteAction()">SOUMETTRE LE SITE</button>
+      
+      <div style="margin-top:20px;padding:15px;border:1px solid var(--border);font-size:0.8em;color:var(--text-dim)">
+        <strong style="color:var(--accent-yellow)">&#9888; IMPORTANT:</strong><br><br>
+        - Le code HTML est obligatoire<br>
+        - Le CSS et JS sont optionnels<br>
+        - Le site sera visible apres validation par l'admin<br>
+        - Tu peux soumettre plusieurs sites<br>
+        - Accessible via: /site/ton-slug
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="section-title">APERCU LIVE</div>
+        <iframe id="preview" style="width:100%;height:300px;border:1px solid var(--border);background:#fff"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    let activeTab = 'html';
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.code-editor textarea').forEach(t => t.style.display = 'none');
+      
+      event.target.classList.add('active');
+      document.getElementById('code-' + tab).style.display = 'block';
+      activeTab = tab;
+    }
+    
+    // Live preview
+    function updatePreview() {
+      const html = document.getElementById('code-html').value;
+      const css = document.getElementById('code-css').value;
+      const js = document.getElementById('code-js').value;
+      
+      if (!html) return;
+      
+      const iframe = document.getElementById('preview');
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`);
+      doc.close();
+    }
+    
+    document.querySelectorAll('.code-editor textarea').forEach(el => {
+      el.addEventListener('input', updatePreview);
+    });
+    
+    async function submitSiteAction() {
+      const name = document.getElementById('site-name').value.trim();
+      const desc = document.getElementById('site-desc').value.trim();
+      const html = document.getElementById('code-html').value;
+      const css = document.getElementById('code-css').value;
+      const js = document.getElementById('code-js').value;
+      
+      if (!name) return showAlert('alert', 'Donne un nom a ton site', 'error');
+      if (!html) return showAlert('alert', 'Le code HTML est obligatoire', 'error');
+      
+      const result = await submitSite(name, desc, html, css, js);
+      if (result.success) {
+        showAlert('alert', `Site "${name}" soumis ! En attente de validation admin. Slug: ${result.slug}`, 'success');
+        document.getElementById('site-name').value = '';
+        document.getElementById('site-desc').value = '';
+        document.getElementById('code-html').value = '';
+        document.getElementById('code-css').value = '';
+        document.getElementById('code-js').value = '';
+        updatePreview();
+      } else {
+        showAlert('alert', result.error, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
