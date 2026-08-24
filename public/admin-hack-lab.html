@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADMIN // HACK LAB</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128187;</text></svg>">
+  <style>
+    .admin-panel { max-width:900px; margin:40px auto; padding:20px; }
+    .admin-title { font-family:'Orbitron',monospace; color:var(--green); text-align:center; font-size:1.8em; margin-bottom:30px; text-shadow:0 0 20px rgba(0,255,65,0.3); }
+    .admin-form { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:25px; margin-bottom:30px; }
+    .admin-form h3 { color:var(--green); font-family:'Orbitron',monospace; margin-bottom:20px; font-size:1em; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; }
+    .form-row.full { grid-template-columns:1fr; }
+    .form-group label { display:block; color:var(--text-muted); font-size:0.75em; margin-bottom:5px; font-family:'Orbitron',monospace; }
+    .form-group input, .form-group select, .form-group textarea { width:100%; background:#0a0a0f; border:1px solid var(--border); color:var(--green); padding:10px 15px; border-radius:8px; font-family:monospace; font-size:0.9em; }
+    .form-group input:focus, .form-group select:focus { border-color:var(--green); outline:none; box-shadow:0 0 10px rgba(0,255,65,0.2); }
+    .btn-add { background:var(--green); color:#000; border:none; padding:12px 30px; border-radius:8px; font-family:'Orbitron',monospace; font-weight:bold; cursor:pointer; font-size:0.85em; }
+    .btn-add:hover { box-shadow:0 0 20px rgba(0,255,65,0.4); }
+    .products-list { margin-top:30px; }
+    .product-item { background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:15px 20px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; transition:all 0.3s; }
+    .product-item:hover { border-color:var(--green); }
+    .product-info { flex:1; }
+    .product-info h4 { color:var(--green); font-size:0.95em; margin:0 0 5px 0; }
+    .product-info p { color:var(--text-muted); font-size:0.8em; margin:0; }
+    .product-price { color:var(--yellow); font-family:'Orbitron',monospace; font-weight:bold; margin:0 20px; }
+    .btn-delete { background:#ff0040; color:#fff; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-size:0.8em; font-family:'Orbitron',monospace; }
+    .btn-delete:hover { box-shadow:0 0 15px rgba(255,0,64,0.4); }
+    .code-input { text-align:center; margin:80px auto; }
+    .code-input input { background:#0a0a0f; border:2px solid var(--green); color:var(--green); padding:15px 25px; border-radius:10px; font-family:'Orbitron',monospace; font-size:1.3em; text-align:center; width:200px; letter-spacing:5px; }
+    .code-input button { display:block; margin:15px auto 0; background:var(--green); color:#000; border:none; padding:12px 30px; border-radius:8px; font-family:'Orbitron',monospace; font-weight:bold; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <canvas class="matrix-bg" id="matrix"></canvas>
+
+  <a href="/hack-lab.html" style="display:block;text-align:center;padding:20px;color:var(--green);text-decoration:none;font-family:'Orbitron',monospace;font-size:0.85em">&larr; RETOUR AU HACK LAB</a>
+
+  <div id="login-section" class="code-input">
+    <div style="font-family:'Orbitron',monospace;color:var(--green);font-size:1.5em;margin-bottom:20px">&#128187; CODE ADMIN</div>
+    <input type="password" id="admin-code" placeholder="CODE" maxlength="4">
+    <button onclick="checkCode()">ACCEDER</button>
+    <div id="error-msg" style="color:#ff0040;margin-top:15px;font-size:0.85em"></div>
+  </div>
+
+  <div id="admin-content" class="admin-panel" style="display:none">
+    <div class="admin-title">&#128187; ADMIN HACK LAB</div>
+
+    <div class="admin-form">
+      <h3>+ AJOUTER UN OUTIL</h3>
+      <div class="form-row">
+        <div class="form-group"><label>NOM</label><input type="text" id="p-name" placeholder="Nom de l'outil"></div>
+        <div class="form-group"><label>ICONE (emoji)</label><input type="text" id="p-icon" placeholder="&#128187;" maxlength="4"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>DESCRIPTION</label><input type="text" id="p-desc" placeholder="Description courte"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>PRIX ($)</label><input type="number" id="p-price" placeholder="5000"></div>
+        <div class="form-group"><label>PRIX CRYPTO</label><input type="text" id="p-crypto" placeholder="0.001 BTC"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CATEGORIE</label>
+          <select id="p-category">
+            <option value="exploit">EXPLOITS</option>
+            <option value="spy">ESPIONNAGE</option>
+            <option value="crypto">CRYPTO</option>
+            <option value="social">SOCIAL ENGINEERING</option>
+            <option value="hardware">HARDWARE</option>
+          </select>
+        </div>
+        <div class="form-group"><label>VENDEUR</label><input type="text" id="p-seller" placeholder="Pseudo vendeur"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>BADGE</label>
+          <select id="p-badge">
+            <option value="">AUCUN</option>
+            <option value="HOT">HOT</option>
+            <option value="NEW">NEW</option>
+            <option value="VIP">VIP</option>
+          </select>
+        </div>
+        <div class="form-group"><label>FEATURES (separes par ;)</label><input type="text" id="p-features" placeholder="Feature 1; Feature 2; Feature 3"></div>
+      </div>
+      <button class="btn-add" onclick="addTool()">+ AJOUTER</button>
+    </div>
+
+    <div class="products-list" id="products-list"></div>
+  </div>
+
+  <div class="footer">
+    <div class="warning">CE SITE EST UNIQUEMENT POUR DU ROLEPLAY. AUCUNE ACTIVITE REELLE N'A LIEU.</div>
+    <div>HACK LAB ADMIN &copy; 2026</div>
+  </div>
+
+  <script>
+    const ADMIN_CODE = '2025';
+
+    function checkCode() {
+      if (document.getElementById('admin-code').value === ADMIN_CODE) {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-content').style.display = 'block';
+        renderTools();
+      } else {
+        document.getElementById('error-msg').textContent = 'Code incorrect';
+      }
+    }
+    document.getElementById('admin-code').addEventListener('keydown', e => { if (e.key === 'Enter') checkCode(); });
+
+    function getTools() { const s = localStorage.getItem('hacklab_tools'); return s ? JSON.parse(s) : []; }
+    function saveTools(t) { localStorage.setItem('hacklab_tools', JSON.stringify(t)); }
+
+    function renderTools() {
+      const tools = getTools();
+      const list = document.getElementById('products-list');
+      if (tools.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">Aucun outil</p>'; return; }
+      list.innerHTML = tools.map(t => `
+        <div class="product-item">
+          <div class="product-info"><h4>${t.icon} ${t.name}</h4><p>${t.desc} | ${t.seller} | ${t.category}</p></div>
+          <div class="product-price">${t.price.toLocaleString()} $</div>
+          <button class="btn-delete" onclick="deleteTool(${t.id})">SUPPRIMER</button>
+        </div>
+      `).join('');
+    }
+
+    function addTool() {
+      const tools = getTools();
+      const badgeVal = document.getElementById('p-badge').value;
+      const featuresRaw = document.getElementById('p-features').value;
+      tools.push({
+        id: tools.length > 0 ? Math.max(...tools.map(t => t.id)) + 1 : 1,
+        name: document.getElementById('p-name').value || 'Sans nom',
+        icon: document.getElementById('p-icon').value || '&#128187;',
+        desc: document.getElementById('p-desc').value || '',
+        price: parseInt(document.getElementById('p-price').value) || 0,
+        crypto: document.getElementById('p-crypto').value || '',
+        category: document.getElementById('p-category').value,
+        seller: document.getElementById('p-seller').value || 'Inconnu',
+        badge: badgeVal,
+        badgeClass: badgeVal === 'HOT' ? 'hot' : badgeVal === 'VIP' ? 'vip' : badgeVal === 'NEW' ? 'new' : '',
+        features: featuresRaw ? featuresRaw.split(';').map(f => f.trim()) : []
+      });
+      saveTools(tools);
+      renderTools();
+      document.getElementById('p-name').value = '';
+      document.getElementById('p-desc').value = '';
+      document.getElementById('p-price').value = '';
+      document.getElementById('p-features').value = '';
+    }
+
+    function deleteTool(id) { saveTools(getTools().filter(t => t.id !== id)); renderTools(); }
+
+    // Matrix
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = ' DARKNET0123456789ABCDEF@#$%&*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px Fira Code';
+      drops.forEach((y, i) => {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+    setInterval(drawMatrix, 50);
+  </script>
+</body>
+</html>

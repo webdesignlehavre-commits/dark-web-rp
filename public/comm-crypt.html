@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COMM CRYPT // Underground RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128222;</text></svg>">
+  <style>
+    .comm-header { text-align:center; padding:60px 20px 30px; }
+    .comm-header h1 { font-size:2.5em; color:var(--green); font-family:'Orbitron',monospace; text-shadow:0 0 30px rgba(0,255,65,0.5); }
+    .comm-header .tagline { color:var(--text-muted); margin-top:10px; font-size:0.9em; }
+    .comm-container { max-width:900px; margin:20px auto; padding:20px; }
+    .channels-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:15px; margin-bottom:30px; }
+    .channel-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all 0.3s; position:relative; overflow:hidden; }
+    .channel-card:hover { border-color:var(--green); box-shadow:0 0 20px rgba(0,255,65,0.1); transform:translateY(-3px); }
+    .channel-card h3 { color:var(--green); font-family:'Orbitron',monospace; margin-bottom:5px; font-size:0.95em; }
+    .channel-card .members { color:var(--text-dim); font-size:0.75em; margin-top:5px; }
+    .channel-card .last-msg { color:var(--text-muted); font-size:0.8em; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+    .channel-card .badge { position:absolute; top:12px; right:12px; padding:3px 8px; border-radius:20px; font-size:0.65em; font-weight:bold; font-family:'Orbitron',monospace; }
+    .badge-encrypted { background:var(--green); color:#000; }
+    .badge-private { background:#ff0040; color:#fff; }
+    .chat-box { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:20px; display:none; }
+    .chat-box.active { display:block; }
+    .chat-title { font-family:'Orbitron',monospace; color:var(--green); font-size:1.1em; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; }
+    .chat-title .close-btn { background:none; border:1px solid var(--border); color:var(--text-muted); padding:5px 12px; border-radius:6px; cursor:pointer; font-family:'Orbitron',monospace; font-size:0.7em; }
+    .chat-title .close-btn:hover { border-color:#ff0040; color:#ff0040; }
+    .messages { max-height:400px; overflow-y:auto; padding:15px; background:#050508; border-radius:8px; margin-bottom:15px; }
+    .msg { margin-bottom:15px; padding:12px 15px; border-radius:8px; border-left:3px solid var(--green); }
+    .msg.encrypted { border-left-color:#ffd700; }
+    .msg .msg-header { display:flex; justify-content:space-between; margin-bottom:5px; }
+    .msg .msg-user { color:var(--green); font-family:'Orbitron',monospace; font-size:0.85em; font-weight:bold; }
+    .msg.encrypted .msg-user { color:#ffd700; }
+    .msg .msg-time { color:var(--text-dim); font-size:0.7em; }
+    .msg .msg-text { color:var(--text-muted); font-size:0.9em; line-height:1.5; }
+    .msg .msg-text.cipher { font-family:monospace; color:#ffd700; font-size:0.8em; letter-spacing:1px; }
+    .chat-input { display:flex; gap:10px; }
+    .chat-input input { flex:1; background:#0a0a0f; border:1px solid var(--border); color:var(--green); padding:12px 15px; border-radius:8px; font-family:monospace; font-size:0.9em; }
+    .chat-input input:focus { border-color:var(--green); outline:none; }
+    .chat-input button { background:var(--green); color:#000; border:none; padding:12px 20px; border-radius:8px; font-family:'Orbitron',monospace; font-weight:bold; cursor:pointer; font-size:0.85em; }
+    .back-link { display:block; text-align:center; padding:20px; color:var(--green); text-decoration:none; font-family:'Orbitron',monospace; font-size:0.85em; }
+    .section-title { font-family:'Orbitron',monospace; color:var(--green); text-align:center; font-size:1.2em; margin:20px 0; text-shadow:0 0 10px rgba(0,255,65,0.3); }
+  </style>
+</head>
+<body>
+  <canvas class="matrix-bg" id="matrix"></canvas>
+
+  <a href="/" class="back-link">&larr; RETOUR AU PORTAIL</a>
+
+  <div class="comm-header">
+    <h1>&#128222; COMM CRYPT</h1>
+    <div class="tagline">Messagerie chiffree pour les communications RP securisees.</div>
+  </div>
+
+  <div class="comm-container">
+    <div class="section-title">CANAUX DISPONIBLES</div>
+    <div class="channels-list" id="channels-list"></div>
+
+    <div class="chat-box" id="chat-box">
+      <div class="chat-title">
+        <span id="chat-name">CANAL</span>
+        <button class="close-btn" onclick="closeChat()">FERMER</button>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="chat-input">
+        <input type="text" id="msg-input" placeholder="Message chiffre..." maxlength="500">
+        <button onclick="sendMessage()">ENVOYER</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="warning">CE SITE EST UNIQUEMENT POUR DU ROLEPLAY. AUCUNE ACTIVITE REELLE N'A LIEU.</div>
+    <div>COMM CRYPT &copy; 2026 // Chiffrement end-to-end RP</div>
+  </div>
+
+  <script>
+    const defaultChannels = [
+      { id:'general', name:'CANAL GENERAL', icon:'&#128172;', members:42, encrypted:false, messages:[
+        { user:'Shadow', text:'Nouveau serveur dispo pour les missions', time:'14:32', encrypted:false },
+        { user:'CyberGhost', text:'Je propose des braquages de banque ce soir a 21h', time:'14:35', encrypted:false },
+        { user:'DarkPhoenix', text:'Je suis partant, combien de personnes?', time:'14:36', encrypted:false }
+      ]},
+      { id:'dealers', name:'RESEAU DEALERS', icon:'&#128230;', members:18, encrypted:true, messages:[
+        { user:'ElPatron', text:'Stock dispo zone sud, DM pour prix', time:'15:10', encrypted:true },
+        { user:'GrowMaster', text:'Nouvelle reco dispo, 30% de thc', time:'15:22', encrypted:true }
+      ]},
+      { id:'hackers', name:'HACKERS ONLY', icon:'&#128187;', members:12, encrypted:true, messages:[
+        { user:'ZeroCool', text:'Exploit patche, nouveau zero-day dispo', time:'16:00', encrypted:true },
+        { user:'AcidBurn', text:'Firewall du serveur a bypass, je vous envoie le script', time:'16:15', encrypted:true }
+      ]},
+      { id:'armurier', name:'RESEAU ARMURIER', icon:'&#128299;', members:8, encrypted:true, messages:[
+        { user:'GunSmith', text:'Nouvel inventaire AK-47 + silencieux', time:'17:00', encrypted:true },
+        { user:'SniperElite', text:'M24 avec scope x10 disponible', time:'17:30', encrypted:true }
+      ]},
+      { id:'fbi', name:'FBI RP (POLICE)', icon:'&#128694;', members:15, encrypted:false, messages:[
+        { user:'AgentSmith', text:'Patrouille zone centre, alerte braquage', time:'18:00', encrypted:false },
+        { user:'OfficerBlue', text:'Roadblock autoRoute A7 direction sud', time:'18:20', encrypted:false }
+      ]},
+      { id:'vip', name:'SALON VIP', icon:'&#11088;', members:5, encrypted:true, messages:[
+        { user:'Boss', text:'Acces reserve aux membres VIP', time:'19:00', encrypted:true }
+      ]}
+    ];
+
+    let channels = [];
+    let currentChannel = null;
+
+    function loadChannels() {
+      const stored = localStorage.getItem('commcrypt_channels');
+      if (stored) { channels = JSON.parse(stored); }
+      else { channels = defaultChannels; localStorage.setItem('commcrypt_channels', JSON.stringify(channels)); }
+      renderChannels();
+    }
+
+    function renderChannels() {
+      const list = document.getElementById('channels-list');
+      list.innerHTML = channels.map(ch => `
+        <div class="channel-card" onclick="openChannel('${ch.id}')">
+          ${ch.encrypted ? '<span class="badge badge-encrypted">CHIFFRE</span>' : '<span class="badge badge-private">PUBLIC</span>'}
+          <h3>${ch.icon} ${ch.name}</h3>
+          <div class="members">${ch.members} membres actifs</div>
+          ${ch.messages.length > 0 ? `<div class="last-msg">Dernier: "${ch.messages[ch.messages.length-1].text.substring(0,50)}..."</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function openChannel(id) {
+      currentChannel = channels.find(c => c.id === id);
+      if (!currentChannel) return;
+      document.getElementById('chat-name').textContent = currentChannel.icon + ' ' + currentChannel.name;
+      document.getElementById('chat-box').classList.add('active');
+      renderMessages();
+      document.getElementById('msg-input').focus();
+    }
+
+    function closeChat() {
+      document.getElementById('chat-box').classList.remove('active');
+      currentChannel = null;
+    }
+
+    function renderMessages() {
+      const box = document.getElementById('messages');
+      if (!currentChannel || currentChannel.messages.length === 0) {
+        box.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">Aucun message</p>';
+        return;
+      }
+      box.innerHTML = currentChannel.messages.map(m => `
+        <div class="msg ${m.encrypted ? 'encrypted' : ''}">
+          <div class="msg-header">
+            <span class="msg-user">${m.user}</span>
+            <span class="msg-time">${m.time}</span>
+          </div>
+          <div class="msg-text ${m.encrypted ? 'cipher' : ''}">${m.text}</div>
+        </div>
+      `).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function simpleCipher(text) {
+      return text.split('').map(c => c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('msg-input');
+      const text = input.value.trim();
+      if (!text || !currentChannel) return;
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+      currentChannel.messages.push({
+        user: 'Toi',
+        text: currentChannel.encrypted ? simpleCipher(text) : text,
+        time: time,
+        encrypted: currentChannel.encrypted
+      });
+      localStorage.setItem('commcrypt_channels', JSON.stringify(channels));
+      renderMessages();
+      input.value = '';
+    }
+
+    document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+    // Matrix
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = ' DARKNET0123456789ABCDEF@#$%&*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px Fira Code';
+      drops.forEach((y, i) => {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+    setInterval(drawMatrix, 50);
+
+    loadChannels();
+  </script>
+</body>
+</html>

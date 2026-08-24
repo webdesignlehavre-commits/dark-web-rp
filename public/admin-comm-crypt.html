@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADMIN // COMM CRYPT</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128222;</text></svg>">
+  <style>
+    .admin-panel { max-width:900px; margin:40px auto; padding:20px; }
+    .admin-title { font-family:'Orbitron',monospace; color:var(--green); text-align:center; font-size:1.8em; margin-bottom:30px; text-shadow:0 0 20px rgba(0,255,65,0.3); }
+    .admin-form { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:25px; margin-bottom:30px; }
+    .admin-form h3 { color:var(--green); font-family:'Orbitron',monospace; margin-bottom:20px; font-size:1em; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; }
+    .form-row.full { grid-template-columns:1fr; }
+    .form-group label { display:block; color:var(--text-muted); font-size:0.75em; margin-bottom:5px; font-family:'Orbitron',monospace; }
+    .form-group input, .form-group select { width:100%; background:#0a0a0f; border:1px solid var(--border); color:var(--green); padding:10px 15px; border-radius:8px; font-family:monospace; font-size:0.9em; }
+    .form-group input:focus, .form-group select:focus { border-color:var(--green); outline:none; }
+    .btn-add { background:var(--green); color:#000; border:none; padding:12px 30px; border-radius:8px; font-family:'Orbitron',monospace; font-weight:bold; cursor:pointer; }
+    .btn-add:hover { box-shadow:0 0 20px rgba(0,255,65,0.4); }
+    .products-list { margin-top:30px; }
+    .product-item { background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:15px 20px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+    .product-item:hover { border-color:var(--green); }
+    .product-info { flex:1; }
+    .product-info h4 { color:var(--green); font-size:0.95em; margin:0 0 5px 0; }
+    .product-info p { color:var(--text-muted); font-size:0.8em; margin:0; }
+    .btn-delete { background:#ff0040; color:#fff; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-size:0.8em; font-family:'Orbitron',monospace; }
+    .btn-delete:hover { box-shadow:0 0 15px rgba(255,0,64,0.4); }
+    .btn-clear { background:#ffd700; color:#000; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-size:0.8em; font-family:'Orbitron',monospace; margin-left:10px; }
+    .code-input { text-align:center; margin:80px auto; }
+    .code-input input { background:#0a0a0f; border:2px solid var(--green); color:var(--green); padding:15px 25px; border-radius:10px; font-family:'Orbitron',monospace; font-size:1.3em; text-align:center; width:200px; letter-spacing:5px; }
+    .code-input button { display:block; margin:15px auto 0; background:var(--green); color:#000; border:none; padding:12px 30px; border-radius:8px; font-family:'Orbitron',monospace; font-weight:bold; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <canvas class="matrix-bg" id="matrix"></canvas>
+
+  <a href="/comm-crypt.html" style="display:block;text-align:center;padding:20px;color:var(--green);text-decoration:none;font-family:'Orbitron',monospace;font-size:0.85em">&larr; RETOUR AU COMM CRYPT</a>
+
+  <div id="login-section" class="code-input">
+    <div style="font-family:'Orbitron',monospace;color:var(--green);font-size:1.5em;margin-bottom:20px">&#128222; CODE ADMIN</div>
+    <input type="password" id="admin-code" placeholder="CODE" maxlength="4">
+    <button onclick="checkCode()">ACCEDER</button>
+    <div id="error-msg" style="color:#ff0040;margin-top:15px;font-size:0.85em"></div>
+  </div>
+
+  <div id="admin-content" class="admin-panel" style="display:none">
+    <div class="admin-title">&#128222; ADMIN COMM CRYPT</div>
+
+    <div class="admin-form">
+      <h3>+ AJOUTER UN CANAL</h3>
+      <div class="form-row">
+        <div class="form-group"><label>NOM DU CANAL</label><input type="text" id="ch-name" placeholder="NOM DU CANAL"></div>
+        <div class="form-group"><label>ICONE (emoji)</label><input type="text" id="ch-icon" placeholder="&#128172;" maxlength="4"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>NB MEMBRES</label><input type="number" id="ch-members" placeholder="10"></div>
+        <div class="form-group">
+          <label>TYPE</label>
+          <select id="ch-type">
+            <option value="false">PUBLIC</option>
+            <option value="true">CHIFFRE</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-add" onclick="addChannel()">+ AJOUTER</button>
+    </div>
+
+    <div class="products-list" id="channels-list"></div>
+  </div>
+
+  <div class="footer">
+    <div class="warning">CE SITE EST UNIQUEMENT POUR DU ROLEPLAY. AUCUNE ACTIVITE REELLE N'A LIEU.</div>
+    <div>COMM CRYPT ADMIN &copy; 2026</div>
+  </div>
+
+  <script>
+    const ADMIN_CODE = '2026';
+
+    function checkCode() {
+      if (document.getElementById('admin-code').value === ADMIN_CODE) {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-content').style.display = 'block';
+        renderChannels();
+      } else {
+        document.getElementById('error-msg').textContent = 'Code incorrect';
+      }
+    }
+    document.getElementById('admin-code').addEventListener('keydown', e => { if (e.key === 'Enter') checkCode(); });
+
+    function getChannels() { const s = localStorage.getItem('commcrypt_channels'); return s ? JSON.parse(s) : []; }
+    function saveChannels(c) { localStorage.setItem('commcrypt_channels', JSON.stringify(c)); }
+
+    function renderChannels() {
+      const channels = getChannels();
+      const list = document.getElementById('channels-list');
+      if (channels.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">Aucun canal</p>'; return; }
+      list.innerHTML = channels.map(ch => `
+        <div class="product-item">
+          <div class="product-info">
+            <h4>${ch.icon} ${ch.name}</h4>
+            <p>${ch.members} membres | ${ch.encrypted ? 'Chiffre' : 'Public'} | ${ch.messages?.length || 0} messages</p>
+          </div>
+          <button class="btn-delete" onclick="deleteChannel('${ch.id}')">SUPPRIMER</button>
+        </div>
+      `).join('');
+    }
+
+    function addChannel() {
+      const channels = getChannels();
+      channels.push({
+        id: 'ch_' + Date.now(),
+        name: document.getElementById('ch-name').value || 'NOUVEAU CANAL',
+        icon: document.getElementById('ch-icon').value || '&#128172;',
+        members: parseInt(document.getElementById('ch-members').value) || 0,
+        encrypted: document.getElementById('ch-type').value === 'true',
+        messages: []
+      });
+      saveChannels(channels);
+      renderChannels();
+      document.getElementById('ch-name').value = '';
+    }
+
+    function deleteChannel(id) { saveChannels(getChannels().filter(c => c.id !== id)); renderChannels(); }
+
+    // Matrix
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = ' DARKNET0123456789ABCDEF@#$%&*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px Fira Code';
+      drops.forEach((y, i) => {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+    setInterval(drawMatrix, 50);
+  </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HACK LAB // Underground RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128187;</text></svg>">
+  <style>
+    .lab-header { text-align:center; padding:60px 20px 30px; }
+    .lab-header h1 { font-size:2.5em; color:var(--green); font-family:'Orbitron',monospace; text-shadow:0 0 30px rgba(0,255,65,0.5); }
+    .lab-header .tagline { color:var(--text-muted); margin-top:10px; font-size:0.9em; }
+    .tools-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(350px,1fr)); gap:20px; padding:20px; max-width:1200px; margin:0 auto; }
+    .tool-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:25px; transition:all 0.3s; position:relative; overflow:hidden; }
+    .tool-card:hover { border-color:var(--green); box-shadow:0 0 20px rgba(0,255,65,0.1); transform:translateY(-3px); }
+    .tool-card .tool-icon { font-size:2em; margin-bottom:10px; }
+    .tool-card h3 { color:var(--green); font-family:'Orbitron',monospace; margin-bottom:8px; font-size:1em; }
+    .tool-card .desc { color:var(--text-muted); font-size:0.85em; line-height:1.5; margin-bottom:15px; }
+    .tool-card .price-tag { font-family:'Orbitron',monospace; color:var(--yellow); font-size:1.1em; font-weight:bold; }
+    .tool-card .crypto-tag { color:var(--text-dim); font-size:0.7em; }
+    .tool-card .badge { position:absolute; top:15px; right:15px; padding:4px 10px; border-radius:20px; font-size:0.7em; font-weight:bold; font-family:'Orbitron',monospace; }
+    .tool-card .seller-info { color:var(--text-dim); font-size:0.75em; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+    .tool-card .features { list-style:none; padding:0; margin:10px 0; }
+    .tool-card .features li { color:var(--text-muted); font-size:0.8em; padding:3px 0; }
+    .tool-card .features li::before { content:'> '; color:var(--green); }
+    .category-filter { display:flex; justify-content:center; gap:10px; padding:20px; flex-wrap:wrap; }
+    .cat-btn { background:var(--card-bg); border:1px solid var(--border); color:var(--text-muted); padding:8px 18px; border-radius:20px; cursor:pointer; font-family:'Orbitron',monospace; font-size:0.75em; transition:all 0.3s; }
+    .cat-btn:hover, .cat-btn.active { border-color:var(--green); color:var(--green); background:rgba(0,255,65,0.05); }
+    .back-link { display:block; text-align:center; padding:20px; color:var(--green); text-decoration:none; font-family:'Orbitron',monospace; font-size:0.85em; }
+    .back-link:hover { text-shadow:0 0 10px var(--green); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  </style>
+</head>
+<body>
+  <canvas class="matrix-bg" id="matrix"></canvas>
+
+  <a href="/" class="back-link">&larr; RETOUR AU PORTAIL</a>
+
+  <div class="lab-header">
+    <h1>&#128187; HACK LAB</h1>
+    <div class="tagline">Outils de hacking, exploits et services cyber. Tout pour le roleplay.</div>
+  </div>
+
+  <div class="category-filter" id="filters">
+    <button class="cat-btn active" onclick="filterCat('all')">TOUS</button>
+    <button class="cat-btn" onclick="filterCat('exploit')">EXPLOITS</button>
+    <button class="cat-btn" onclick="filterCat('spy')">ESPIONNAGE</button>
+    <button class="cat-btn" onclick="filterCat('crypto')">CRYPTO</button>
+    <button class="cat-btn" onclick="filterCat('social')">SOCIAL ENGINEERING</button>
+    <button class="cat-btn" onclick="filterCat('hardware')">HARDWARE</button>
+  </div>
+
+  <div class="tools-grid" id="tools-grid">
+    <p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Chargement des outils...</p>
+  </div>
+
+  <div class="footer">
+    <div class="warning">CE SITE EST UNIQUEMENT POUR DU ROLEPLAY. AUCUNE ACTIVITE REELLE N'A LIEU.</div>
+    <div>HACK LAB &copy; 2026 // Tous droits reserves</div>
+  </div>
+
+  <script>
+    const defaultTools = [
+      { id:1, name:"Keylogger USB", icon:"&#128270;", desc:"USB keylogger hardware. Enregistre toutes les frappes clavier a distance.", price:2500, crypto:"0.00042 BTC", category:"hardware", seller:"TechDealer", badge:"HOT", badgeClass:"hot", features:["Enregistre 100% des frappes","Portee WiFi: 10m","Batterie 7 jours","Memoire 32GB"] },
+      { id:2, name:"Packet Sniffer", icon:"&#128225;", desc:"Intercepteur de reseau. Capture les donnees en transit sur le serveur RP.", price:5000, crypto:"0.00083 BTC", category:"spy", seller:"NetGhost", badge:"NEW", badgeClass:"new", features:["Capture HTTP/HTTPS","Export en CSV","Detecte les mots de passe","Interface CLI"] },
+      { id:3, name:"Ransomware Kit", icon:"&#128274;", desc:"Kit complet pour simuler un ransomware RP. Chiffre les fichier cible.", price:8000, crypto:"0.00134 BTC", category:"exploit", seller:"VirusMaster", badge:"", badgeClass:"", features:["Chiffrement AES-256","Interface web","Chronometre de paiement","Messagerie victim->admin"] },
+      { id:4, name:"Phishing Kit", icon:"&#127753;", desc:"Pack de pages phishing pre-faites. Banque, email, reseaux sociaux.", price:3000, crypto:"0.00050 BTC", category:"social", seller:"ScamArtist", badge:"", badgeClass:"", features:["10 templates inclus","Serveur de capture","Dashboard de suivi","Personnalisable"] },
+      { id:5, name:"Crypto Miner RP", icon:"&#128176;", desc:"Mineur de crypto monetaire RP. Genere des passive income en arriere-plan.", price:15000, crypto:"0.00251 BTC", category:"crypto", seller:"BitFarm", badge:"VIP", badgeClass:"vip", features:["Mine en AFK","Rendement 500$/h RP","Auto-upgrade","Dashboard stats"] },
+      { id:6, name:"Spyware Mobile", icon:"&#128241;", desc:"Application espion pour les telephones RP. GPS, messages, appels.", price:6000, crypto:"0.00100 BTC", category:"spy", seller:"PhoneBreaker", badge:"", badgeClass:"", features:["Suivi GPS temps reel","Lecture SMS","Environnement audio","Invisible"] },
+      { id:7, name:"DDoS Botnet", icon:"&#127760;", desc:"Botnet de 1000 robots. Pour attaques de deni de service RP.", price:10000, crypto:"0.00167 BTC", category:"exploit", seller:"BotKing", badge:"HOT", badgeClass:"hot", features:["1000 bots","Multi-cible","Anti-detection","Mode sleep/wake"] },
+      { id:8, name:"Zero-Day Exploit", icon:"&#9888;", desc:"Exploit zero-day unique. Vulnerabilite inconnue du systeme RP.", price:25000, crypto:"0.00418 BTC", category:"exploit", seller:"ShadowHacker", badge:"VIP", badgeClass:"vip", features:["Usage unique","Bypass admin","Acces root","Silencieux"] },
+      { id:9, name:"Fake ID Generator", icon:"&#128196;", desc:"Generateur de fausses identites RP. Photo, nom, date de naissance.", price:4000, crypto:"0.00067 BTC", category:"social", seller:"DocMaker", badge:"", badgeClass:"", features:["50+ templates","Photo IA integree","PDF haute qualite","Code barre"] },
+      { id:10, name:"Hardware Wallet", icon:"&#128272;", desc:"Portefeuille physique securise. Stocke les cryptos RP en toute surete.", price:3500, crypto:"0.00058 BTC", category:"crypto", seller:"CryptoVault", badge:"", badgeClass:"", features:["Chiffrement HW","Ecran OLED","Bouton physique","Backup seed"] },
+      { id:11, name:"WiFi Pineapple", icon:"&#127760;", desc:"Point d'acces WiFi malveillant. Capture tout le trafic RP.", price:7000, crypto:"0.00117 BTC", category:"hardware", seller:"NetGhost", badge:"NEW", badgeClass:"new", features:["Fake AP auto","Capture handshakes","Portal captive","Logging complet"] },
+      { id:12, name:"Social Engineer Kit", icon:"&#128100;", desc:"Kit d'ingenierie sociale. Scripts d'appels, emails, pretexting.", price:2000, crypto:"0.00033 BTC", category:"social", seller:"ScamArtist", badge:"", badgeClass:"", features:["20 scripts d'appels","Templates emails","Liste de pretexts","Guide RP"] }
+    ];
+
+    let tools = [];
+    let currentFilter = 'all';
+
+    function loadTools() {
+      const stored = localStorage.getItem('hacklab_tools');
+      if (stored) { tools = JSON.parse(stored); }
+      else { tools = defaultTools; localStorage.setItem('hacklab_tools', JSON.stringify(tools)); }
+      renderTools();
+    }
+
+    function renderTools() {
+      const grid = document.getElementById('tools-grid');
+      const filtered = currentFilter === 'all' ? tools : tools.filter(t => t.category === currentFilter);
+      if (filtered.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Aucun outil dans cette categorie</p>';
+        return;
+      }
+      grid.innerHTML = filtered.map(t => `
+        <div class="tool-card" data-category="${t.category}">
+          ${t.badge ? `<span class="badge badge-${t.badgeClass}">${t.badge}</span>` : ''}
+          <div class="tool-icon">${t.icon}</div>
+          <h3>${t.name}</h3>
+          <div class="desc">${t.desc}</div>
+          ${t.features ? `<ul class="features">${t.features.map(f => '<li>'+f+'</li>').join('')}</ul>` : ''}
+          <div class="price-tag">${t.price.toLocaleString()} $</div>
+          <div class="crypto-tag">${t.crypto}</div>
+          <div class="seller-info">Vendeur: <strong>${t.seller}</strong></div>
+        </div>
+      `).join('');
+    }
+
+    function filterCat(cat) {
+      currentFilter = cat;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      renderTools();
+    }
+
+    // Matrix
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = ' DARKNET0123456789ABCDEF@#$%&*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px Fira Code';
+      drops.forEach((y, i) => {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+    setInterval(drawMatrix, 50);
+
+    loadTools();
+  </script>
+</body>
+</html>

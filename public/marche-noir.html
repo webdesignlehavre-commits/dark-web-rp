@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARCHE NOIR // Underground RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128274;</text></svg>">
+  <style>
+    .market-header { text-align:center; padding:60px 20px 30px; position:relative; }
+    .market-header h1 { font-size:2.5em; color:var(--green); font-family:'Orbitron',monospace; text-shadow:0 0 30px rgba(0,255,65,0.5); }
+    .market-header .tagline { color:var(--text-muted); margin-top:10px; font-size:0.9em; }
+    .market-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; padding:20px; max-width:1200px; margin:0 auto; }
+    .market-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:25px; transition:all 0.3s; position:relative; overflow:hidden; }
+    .market-card:hover { border-color:var(--green); box-shadow:0 0 20px rgba(0,255,65,0.1); transform:translateY(-3px); }
+    .market-card .icon { font-size:2.5em; margin-bottom:15px; }
+    .market-card h3 { color:var(--green); font-family:'Orbitron',monospace; margin-bottom:8px; font-size:1.1em; }
+    .market-card .desc { color:var(--text-muted); font-size:0.85em; line-height:1.5; margin-bottom:15px; }
+    .market-card .price { font-family:'Orbitron',monospace; color:var(--yellow); font-size:1.2em; font-weight:bold; }
+    .market-card .crypto { color:var(--text-dim); font-size:0.75em; margin-top:5px; }
+    .market-card .badge { position:absolute; top:15px; right:15px; padding:4px 10px; border-radius:20px; font-size:0.7em; font-weight:bold; font-family:'Orbitron',monospace; }
+    .badge-hot { background:#ff0040; color:#fff; animation:pulse 2s infinite; }
+    .badge-new { background:var(--green); color:#000; }
+    .badge-vip { background:#ffd700; color:#000; }
+    .market-card .seller { color:var(--text-dim); font-size:0.75em; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+    .market-card .stars { color:#ffd700; font-size:0.85em; }
+    .market-card .reviews { color:var(--text-muted); font-size:0.75em; }
+    .category-filter { display:flex; justify-content:center; gap:10px; padding:20px; flex-wrap:wrap; }
+    .cat-btn { background:var(--card-bg); border:1px solid var(--border); color:var(--text-muted); padding:8px 18px; border-radius:20px; cursor:pointer; font-family:'Orbitron',monospace; font-size:0.75em; transition:all 0.3s; }
+    .cat-btn:hover, .cat-btn.active { border-color:var(--green); color:var(--green); background:rgba(0,255,65,0.05); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .back-link { display:block; text-align:center; padding:20px; color:var(--green); text-decoration:none; font-family:'Orbitron',monospace; font-size:0.85em; }
+    .back-link:hover { text-shadow:0 0 10px var(--green); }
+  </style>
+</head>
+<body>
+  <canvas class="matrix-bg" id="matrix"></canvas>
+
+  <a href="/" class="back-link">&larr; RETOUR AU PORTAIL</a>
+
+  <div class="market-header">
+    <h1>&#128274; MARCHE NOIR</h1>
+    <div class="tagline">Le marketplace underground pour les joueurs RP. Tout est possible, tout est discretion.</div>
+  </div>
+
+  <div class="category-filter" id="filters">
+    <button class="cat-btn active" onclick="filterCategory('all')">TOUS</button>
+    <button class="cat-btn" onclick="filterCategory('vehicles')">VEHICULES</button>
+    <button class="cat-btn" onclick="filterCategory('weapons')">ARMES</button>
+    <button class="cat-btn" onclick="filterCategory('drugs')">DROGUES</button>
+    <button class="cat-btn" onclick="filterCategory('services')">SERVICES</button>
+    <button class="cat-btn" onclick="filterCategory('stolen')">VOL</button>
+  </div>
+
+  <div class="market-grid" id="market-grid">
+    <p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Chargement des annonces...</p>
+  </div>
+
+  <div class="footer">
+    <div class="warning">CE SITE EST UNIQUEMENT POUR DU ROLEPLAY. AUCUNE ACTIVITE REELLE N'A LIEU.</div>
+    <div>MARCHE NOIR &copy; 2026 // Paiement en crypto RP uniquement</div>
+  </div>
+
+  <script>
+    const defaultProducts = [
+      { id:1, name:"SUV Vole", icon:"&#128663;", desc:"BMW X5 volee de la zone sud. Plaques changees, pret a rouler.", price:25000, crypto:"0.00418 BTC", category:"vehicles", seller:"VoleurAuto", reviews:8, stars:4.5, badge:"HOT", badgeClass:"hot" },
+      { id:2, name:"Moto Police", icon:"&#128662;", desc:"Moto de police recalee. Gyrophare inclus. Sirene desactivee.", price:18000, crypto:"0.00301 BTC", category:"vehicles", seller:"FlikCollector", reviews:5, stars:4.2, badge:"", badgeClass:"" },
+      { id:3, name:"Camion Benne", icon:"&#128667;", desc:"Camion benne 10T. Idéal pour les braquages de banque.", price:35000, crypto:"0.00585 BTC", category:"vehicles", seller:"BigTrucks", reviews:12, stars:4.8, badge:"VIP", badgeClass:"vip" },
+      { id:4, name:"Desert Eagle Or", icon:"&#128299;", desc:"Desert Eagle plaquee or. 12 balles. Custom skin unique.", price:8000, crypto:"0.00134 BTC", category:"weapons", seller:"GunSmith_76", reviews:15, stars:4.9, badge:"HOT", badgeClass:"hot" },
+      { id:5, name:"Sniper M24", icon:"&#127919;", desc:"M24 avec scope x8. Portee 800m. Silencieux inclus.", price:12000, crypto:"0.00201 BTC", category:"weapons", seller:"SniperElite", reviews:9, stars:4.7, badge:"", badgeClass:"" },
+      { id:6, name:"Grenade Flash x5", icon:"&#128163;", desc:"Pack de 5 grenades eblouissantes. Utile pour les assaults.", price:3000, crypto:"0.00050 BTC", category:"weapons", seller:"Armurier_76", reviews:20, stars:4.6, badge:"", badgeClass:"" },
+      { id:7, name:"Cocaine Colis 100g", icon:"&#10052;", desc:"100g de cocaine pure. Origine Colombie. Livraison sechee.", price:15000, crypto:"0.00251 BTC", category:"drugs", seller:"ElPatron", reviews:11, stars:4.4, badge:"NEW", badgeClass:"new" },
+      { id:8, name:"Heroine Pack 50g", icon:"&#9764;", desc:"50g d'heroine noire. Qualite premium. Zone de livraison au choix.", price:20000, crypto:"0.00334 BTC", category:"drugs", seller:"DarkDealer", reviews:7, stars:4.1, badge:"", badgeClass:"" },
+      { id:9, name:"LSD x20 doses", icon:"&#127752;", desc:"20 dosettes de LSD labellise. Effets garantis 8h.", price:5000, crypto:"0.00083 BTC", category:"drugs", seller:"AcidMaker", reviews:14, stars:4.7, badge:"HOT", badgeClass:"hot" },
+      { id:10, name:"Braquage Banque", icon:"&#128176;", desc:"Service complet: plan, armes, vehicule fuite. Part 60/40.", price:50000, crypto:"0.00836 BTC", category:"services", seller:"HeistBoss", reviews:4, stars:4.9, badge:"VIP", badgeClass:"vip" },
+      { id:11, name:"Faux Papiers Express", icon:"&#128196;", desc:"Carte d'identite + permis en 2h. Photo personnalisee.", price:8000, crypto:"0.00134 BTC", category:"services", seller:"DocMaker", reviews:22, stars:4.8, badge:"", badgeClass:"" },
+      { id:12, name:"Protection Zone", icon:"&#128737;", desc:"Protection 24h dans la zone sicure. Aucune agression possible.", price:10000, crypto:"0.00167 BTC", category:"services", seller:"SafeHouse", reviews:6, stars:4.3, badge:"", badgeClass:"" },
+      { id:13, name:"Voiture Sport Ferrari", icon:"&#128664;", desc:"Ferrari 488 volee. Rouge. 320km/h. Plaques francaises.", price:80000, crypto:"0.01338 BTC", category:"stolen", seller:"LuxCar Thief", reviews:3, stars:5.0, badge:"VIP", badgeClass:"vip" },
+      { id:14, name:"Laptop Hacked", icon:"&#128187;", desc:"MacBook Pro vole. Contient des donnees sensibles de banque.", price:6000, crypto:"0.00100 BTC", category:"stolen", seller:"CyberThief", reviews:10, stars:4.5, badge:"NEW", badgeClass:"new" },
+      { id:15, name:"Bijoux Voles", icon:"&#128142;", desc:"Lot de bijoux: 2 bagues, 1 collier, 2 montres. Estime 30K.", price:15000, crypto:"0.00251 BTC", category:"stolen", seller:"JewelSnatcher", reviews:8, stars:4.6, badge:"", badgeClass:"" }
+    ];
+
+    let products = [];
+    let currentFilter = 'all';
+
+    function loadProducts() {
+      const stored = localStorage.getItem('marche_noir_products');
+      if (stored) {
+        products = JSON.parse(stored);
+      } else {
+        products = defaultProducts;
+        localStorage.setItem('marche_noir_products', JSON.stringify(products));
+      }
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('market-grid');
+      const filtered = currentFilter === 'all' ? products : products.filter(p => p.category === currentFilter);
+      if (filtered.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">Aucune annonce dans cette categorie</p>';
+        return;
+      }
+      grid.innerHTML = filtered.map(p => `
+        <div class="market-card" data-category="${p.category}">
+          ${p.badge ? `<span class="badge badge-${p.badgeClass}">${p.badge}</span>` : ''}
+          <div class="icon">${p.icon}</div>
+          <h3>${p.name}</h3>
+          <div class="desc">${p.desc}</div>
+          <div class="price">${p.price.toLocaleString()} $</div>
+          <div class="crypto">${p.crypto}</div>
+          <div class="seller">
+            <span>Vendeur: <strong>${p.seller}</strong></span><br>
+            <span class="stars">${'&#9733;'.repeat(Math.floor(p.stars))}${'&#9734;'.repeat(5-Math.floor(p.stars))}</span>
+            <span class="reviews">(${p.reviews} avis)</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterCategory(cat) {
+      currentFilter = cat;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      renderProducts();
+    }
+
+    // Matrix rain
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = ' DARKNET0123456789ABCDEF@#$%&*';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px Fira Code';
+      drops.forEach((y, i) => {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, y * fontSize);
+        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+    setInterval(drawMatrix, 50);
+
+    loadProducts();
+  </script>
+</body>
+</html>
